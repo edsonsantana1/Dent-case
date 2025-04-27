@@ -1,0 +1,104 @@
+// Função para alternar a exibição do submenu
+function toggleSubMenu(button) {
+  const subMenu = button.nextElementSibling;
+  subMenu.style.display = subMenu.style.display === "flex" ? "none" : "flex";
+}
+
+// Função para buscar os casos filtrados
+async function fetchCases() {
+const filterStatus = document.getElementById('filter-status');
+const filterDate = document.getElementById('filter-date');
+const searchCase = document.getElementById('search-case');
+const caseListContainer = document.querySelector('.cases-list-container');
+
+const statusValue = filterStatus.value;
+const dateValue = filterDate.value.toLowerCase();
+const searchValue = searchCase.value.toLowerCase();
+
+try {
+  // Construção da URL com os filtros
+  const url = new URL('https://laudos-pericias.onrender.com/api/casos');
+  const params = {
+    status: statusValue,
+    date: dateValue,
+    search: searchValue
+  };
+
+  // Adicionando os parâmetros de consulta à URL
+  Object.keys(params).forEach(key => {
+    if (params[key]) {
+      url.searchParams.append(key, params[key]);
+    }
+  });
+
+  // Fazendo a requisição GET para o backend
+  const response = await fetch(url);
+  const cases = await response.json();
+
+  // Limpar a lista de casos antes de adicionar os novos
+  caseListContainer.innerHTML = '';
+
+  // Adicionando os casos retornados pela API
+  cases.forEach((caseItem) => {
+    const caseElement = document.createElement('div');
+    caseElement.classList.add('case-list-item');
+    
+    caseElement.innerHTML = `
+      <div class="case-list-content" onclick="window.location='view-case.html?id=${caseItem.id}'">
+        <div class="case-list-main">
+          <span class="case-id">#${caseItem.id}</span>
+          <h3 class="case-title">${caseItem.title}</h3>
+          <span class="case-status ${getStatusClass(caseItem.status)}">${caseItem.status}</span>
+        </div>
+        <div class="case-list-details">
+          <p class="case-description">${caseItem.description}</p>
+          <div class="case-meta">
+            <span><i class="fas fa-calendar-alt"></i> ${formatDate(caseItem.date)}</span>
+            <span><i class="fas fa-user-md"></i> ${caseItem.expert}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    caseListContainer.appendChild(caseElement);
+  });
+} catch (error) {
+  console.error('Erro ao buscar casos:', error);
+}
+}
+
+// Função para obter a classe de status do caso (ajuste conforme necessário)
+function getStatusClass(status) {
+switch (status) {
+  case 'aberto':
+    return 'status-aberto';
+  case 'em andamento':
+    return 'status-em-andamento';
+  case 'pendente':
+    return 'status-pendente';
+  case 'concluído':
+    return 'status-concluido';
+  default:
+    return '';
+}
+}
+
+// Função para formatar as datas (ajuste conforme necessário)
+function formatDate(dateString) {
+const options = { year: 'numeric', month: 'long', day: 'numeric' };
+const date = new Date(dateString);
+return date.toLocaleDateString('pt-BR', options);
+}
+
+// Função de filtro de casos (chama a função fetchCases)
+function filterCases() {
+fetchCases();
+}
+
+// Adicionar ouvintes de eventos aos filtros
+document.getElementById('filter-status').addEventListener('change', filterCases);
+document.getElementById('filter-date').addEventListener('change', filterCases);
+document.getElementById('search-case').addEventListener('input', filterCases);
+
+// Inicializa a busca ao carregar a página
+window.addEventListener('load', fetchCases);

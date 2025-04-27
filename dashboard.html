@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casos - Sistema Odonto-Legal</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" sizes="192x192" href="imag/192.png">
+  <link rel="icon" sizes="512x512" href="imag/512.png">
+
+</head>
+
+<body class="welcome-body">
+    <div class="welcome-container">
+        <div class="welcome-text">
+            <h1 class="welcome-title">Bem-vindo(a), <span id="nomeUsuario">Usuário</span>!</h1>
+            <p class="welcome-subtitle">Estamos felizes em ter você aqui.</p>
+            <a href="list-case.html" class="btn btn-primary">Continuar</a>
+        </div>
+        <div class="welcome-image">
+            <img src="imag/dashboard.jpg" alt="Imagem de boas-vindas" />
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log('Service Worker registrado com sucesso!'))
+                .catch((error) => console.error('Falha ao registrar o Service Worker:', error));
+        }
+
+        // Substitua com o nome real do usuário após o login
+        const nomeUsuario = "Juliana";
+        document.getElementById("nomeUsuario").textContent = nomeUsuario;
+    </script>
+</body>
+
+</html>

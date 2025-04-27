@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Esqueceu a Senha</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/login.css" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" sizes="192x192" href="imag/192.png">
+  <link rel="icon" sizes="512x512" href="imag/512.png">
+  
+   
+</head>
+
+<body>
+    <section>
+        <div class="imgBx">
+            <img src="imag/login.jpg" alt="Login Imagem" />
+        </div>
+
+        <div class="contentBx">
+            <div class="form-box">
+                <div class="logo-placeholder">
+                    <img src="imag/logo1.png" alt="Login Imagem" class="logo" />
+                </div>
+
+                <form id="esqueceuSenhaForm">
+                    <div class="form-group">
+                        <label for="matricula"><span>Digite sua matrícula</span></label>
+                        <input type="number" name="matricula" id="matricula" placeholder="Digite sua matrícula"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <input type="submit" value="Solicitar Recuperação" />
+                    </div>
+
+                    <div class="form-group">
+                        <p>Voltar para o Login? <a href="index.html">Clique aqui</a></p>
+                    </div>
+
+                    <div id="mensagemErro"></div>
+                    <div id="mensagemSucesso" style="display:none; color:green;"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+
+    <script src="js/loginEsqueceu.js" defer></script>
+</body>
+
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casos - Sistema Odonto-Legal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" sizes="192x192" href="imag/192.png">
+  <link rel="icon" sizes="512x512" href="imag/512.png">
+
+</head>
+
+<body>
+    <button class="menu-toggle" id="menu-toggle">
+        <i class="fas fa-bars"></i>
+      </button>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-placeholder">
+        <img src="imag/logo2.png" alt="Login Imagem" class="logo" />
+      </div>
+    </div>
+    <a href="dashboard.html"><span class="material-symbols-outlined">home</span> Página Inicial</a>
+    <a href="list-case.html" class="active"><span class="material-symbols-outlined">folder</span> Casos</a>
+    <a href="usuarios.html"><span class="material-symbols-outlined">group</span> Gerenciamento de Usuários</a>
+    <a href="index.html"><span class="material-symbols-outlined">logout</span> Sair</a>
+  </aside>
+
+  <!-- Conteúdo principal -->
+  <div class="main-content">
+    <nav>
+      <h1>Dados do Caso</h1>
+    </nav>
+
+    <div class="container">
+      <!-- Cabeçalho do Caso -->
+      <div class="case-header">
+        <h1 id="case-title">Identificação de vítima em acidente rodoviário</h1>
+        <div class="case-meta">
+          <span class="case-id" data-case-id="CASO-001">#CASO-001</span>
+          <span class="case-status" id="case-status">Em Análise</span>
+        </div>
+
+        <div class="case-details">
+          <p><strong>Descrição:</strong> <span id="case-description">Vítima do sexo masculino, aproximadamente 30 anos, com fraturas dentárias características.</span></p>
+          <p><strong>Perito:</strong> <span id="case-expert">Dr. Silva</span></p>
+          <p><strong>Data Abertura:</strong> <span id="case-date">15/05/2024</span></p>
+        </div>
+
+        <div class="case-actions">
+            <button id="edit-case" class="btn btn-edit"><i class="fas fa-edit"></i> Editar</button>
+            <button id="delete-case" class="btn btn-delete"><i class="fas fa-trash"></i> Excluir</button>
+            <button id="change-status" class="btn btn-status"><i class="fas fa-exchange-alt"></i> Alterar Status</button>
+            <button id="generate-report" class="btn btn-report"><i class="fas fa-file-pdf"></i> Gerar Relatório</button>
+          </div>
+      </div>
+
+      <!-- Modal Editar Caso -->
+      <div id="editModal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>Editar Caso</h2>
+          <form id="edit-form">
+            <label for="edit-title">Título:</label>
+            <input type="text" id="edit-title"><br><br>
+
+            <label for="edit-description">Descrição:</label>
+            <textarea id="edit-description"></textarea><br><br>
+
+            <label for="edit-date">Data de Abertura:</label>
+            <input type="date" id="edit-date"><br><br>
+
+            <label for="edit-expert">Perito:</label>
+            <input type="text" id="edit-expert"><br><br>
+
+            <label for="edit-status">Status:</label>
+            <select id="edit-status">
+              <option value="Aberto">Aberto</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Pendente">Pendente</option>
+              <option value="Concluido">Concluído</option>
+            </select><br><br>
+
+            <button id="save-edit" class="btn btn-submit">Salvar</button>
+            <button id="cancel-edit" class="btn btn-cancel">Cancelar</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Seção de Evidências -->
+      <div class="evidence-section">
+        <div class="section-header">
+          <h2><i class="fas fa-microscope"></i> Evidências</h2>
+          <button id="add-evidence" class="btn btn-primary"><i class="fas fa-plus"></i> Adicionar</button>
+        </div>
+
+        <div class="evidence-list" id="evidence-list">
+          <div class="empty-evidence-message" id="empty-evidence-message">
+            <h3>Nenhuma evidência cadastrada</h3>
+            <p>Clique no botão "Adicionar" para registrar uma nova evidência</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Adicionar Evidência -->
+      <div id="evidence-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>Adicionar Nova Evidência</h2>
+          <form id="evidence-form">
+            <input type="hidden" id="evidence-case-id" value="CASO-001">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="collection-date">Data da coleta:</label>
+                <input type="date" id="collection-date" required>
+              </div>
+              <div class="form-group">
+                <label for="collection-time">Hora:</label>
+                <input type="time" id="collection-time" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="evidence-description-field">Descrição:</label>
+              <textarea id="evidence-description-field" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="evidence-location">Localização:</label>
+              <div class="location-fields">
+                <input type="text" id="evidence-lat" placeholder="Latitude" class="location-input">
+                <input type="text" id="evidence-long" placeholder="Longitude" class="location-input">
+                <button type="button" id="get-location" class="btn btn-location"><i class="fas fa-map-marker-alt"></i> Usar Minha Localização</button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="evidence-image-url">Imagem (URL):</label>
+                <input type="text" id="evidence-image-url" placeholder="Opcional">
+              </div>
+              <div class="form-group">
+                <label for="evidence-video-url">Vídeo (URL):</label>
+                <input type="text" id="evidence-video-url" placeholder="Opcional">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="evidence-document-url">Documento (URL):</label>
+                <input type="text" id="evidence-document-url" placeholder="Opcional">
+              </div>
+              <div class="form-group">
+                <label for="evidence-file">Arquivo:</label>
+                <input type="file" id="evidence-file">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-submit">Salvar Evidência</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal Gerar Laudo -->
+      <div id="evidence-laudo-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>Gerar Laudo para Evidência</h2>
+          <form id="evidence-laudo-form">
+            <input type="hidden" id="selected-evidence-id" value="">
+            <div class="form-group">
+              <label for="evidence-description-readonly">Descrição da Evidência:</label>
+              <textarea id="evidence-description-readonly" readonly></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="expert-name">Perito Responsável:</label>
+                <input type="text" id="expert-name" value="Dr. Silva" required>
+              </div>
+              <div class="form-group">
+                <label for="laudo-findings">Constatações:</label>
+                <textarea id="laudo-findings" required></textarea>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="laudo-conclusions">Conclusões:</label>
+              <textarea id="laudo-conclusions" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-submit">Salvar Laudo</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal Gerar Relatório do Caso -->
+      <div id="report-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>Gerar Relatório do Caso</h2>
+          <form id="report-form">
+            <input type="hidden" id="report-case-id" value="CASO-001">
+
+            <div class="form-group">
+              <label for="report-title">Título do Relatório:</label>
+              <input type="text" id="report-title" required>
+            </div>
+
+            <div class="form-group">
+              <label for="report-description">Descrição do Relatório:</label>
+              <textarea id="report-description" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="report-date">Data do Relatório:</label>
+              <input type="date" id="report-date" required>
+            </div>
+
+            <div class="form-group">
+              <label for="user-id">Usuário Responsável:</label>
+              <select id="user-id" required>
+                <option value="">Selecione o usuário</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-submit">Gerar Relatório</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+  
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+    });
+  </script>
+  <!-- Bibliotecas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="js/view-case.js"></script>
+  
+</body>
+
+</html>

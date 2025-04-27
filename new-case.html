@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casos - Sistema Odonto-Legal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" sizes="192x192" href="imag/192.png">
+    <link rel="icon" sizes="512x512" href="imag/512.png">
+  
+</head>
+
+<body>
+    <button class="menu-toggle" id="menu-toggle">
+        <i class="fas fa-bars"></i>
+      </button>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-placeholder">
+                <img src="imag/logo2.png" alt="Login Imagem" class="logo" />
+            </div>
+        </div>
+        <a href="dashboard.html"><span class="material-symbols-outlined">home</span> Página Inicial</a>
+        <a href="casos.html" class="active"><span class="material-symbols-outlined">folder</span> Casos</a>
+        <a href="usuarios.html"><span class="material-symbols-outlined">group</span> Gerenciamento de Usuários</a>
+        <a href="index.html"><span class="material-symbols-outlined">logout</span> Sair</a>
+    </aside>
+
+    <div class="main-content">
+        <nav>
+            <h1>Lista de Casos</h1>
+        </nav>
+        <div class="container">
+            <header class="main-header">
+                <h1>Cadastrar Novo Caso</h1>
+                <a href="list-case.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </header>
+
+            <div class="form-container">
+                <form id="case-form" action="/api/cases" method="POST">
+                    <!-- ID gerado automaticamente -->
+                    <div class="form-group">
+                        <label for="case-id">ID do Caso</label>
+                        <input type="text" id="case-id" name="caseId" value="CASO-XXXX" readonly>
+                        <small>Gerado automaticamente pelo sistema</small>
+                    </div>
+
+                    <!-- Status deve vir primeiro conforme backend -->
+                    <div class="form-group">
+                        <label for="case-status">Status*</label>
+                        <select id="case-status" name="status" required>
+                            <option value="em andamento" selected>Em Andamento</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="case-description">Descrição Detalhada do Caso*</label>
+                        <textarea id="case-description" name="description" required rows="5"
+                            placeholder="Descreva o caso com detalhes relevantes..."></textarea>
+                    </div>
+
+                    <!-- Informações do Paciente -->
+                    <h3>Informações do Paciente</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patient-name">Nome do Paciente*</label>
+                            <input type="text" id="patient-name" name="patientName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-dob">Data de Nascimento*</label>
+                            <input type="date" id="patient-dob" name="patientAge" required>
+                        </div>
+
+                        <!-- Removido o campo de idade numérica pois no backend o patientAge é Date -->
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patient-gender">Gênero*</label>
+                            <select id="patient-gender" name="patientGender" required>
+                                <option value="">Selecione</option>
+                                <option value="masculino">Masculino</option>
+                                <option value="feminino">Feminino</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-id">Documento de Identidade*</label>
+                            <input type="text" id="patient-id" name="patientID" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patient-contact">Contato do Paciente</label>
+                            <input type="text" id="patient-contact" name="patientContact">
+                        </div>
+                    </div>
+
+                    <!-- Informações do Incidente -->
+                    <h3>Informações do Incidente</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incident-date">Data do Incidente*</label>
+                            <input type="datetime-local" id="incident-date" name="incidentDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="incident-location">Local do Incidente*</label>
+                            <input type="text" id="incident-location" name="incidentLocation" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="incident-description">Descrição do Incidente*</label>
+                        <textarea id="incident-description" name="incidentDescription" required rows="5"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="incident-weapon">Instrumento/Arma (opcional)</label>
+                        <input type="text" id="incident-weapon" name="incidentWsapon">
+                    </div>
+
+                    <!-- Campo oculto para o usuário (deve ser preenchido pelo sistema) -->
+                    <input type="hidden" name="user" id="user-id" value="ID_DO_USUARIO_LOGADO">
+
+                    <!-- Botões -->
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Caso</button>
+                        <button type="button" class="btn btn-success" id="generate-report">Gerar Relatório</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+      
+        menuToggle.addEventListener('click', () => {
+          sidebar.classList.toggle('active');
+        });
+      </script>
+    <!-- Javascript externo -->
+    <script src="js/new-case.js"></script>
+</body>
+
+</html>
