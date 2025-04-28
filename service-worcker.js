@@ -39,6 +39,7 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Interceptação de requisições para buscar no cache
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
@@ -47,7 +48,7 @@ self.addEventListener('fetch', event => {
           // Retorna do cache
           return response;
         }
-       
+        // Se o arquivo não estiver no cache, realiza a requisição de rede
         return fetch(event.request).catch(error => {
           console.error('Erro no fetch da requisição: ', error);
           throw error;
