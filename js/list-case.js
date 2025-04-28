@@ -34,15 +34,16 @@ async function fetchCases() {
     // Construção da URL com filtros
     const url = new URL('https://laudos-pericias.onrender.com/api/cases');
 
+    // Se for perito ou assistente, filtra casos pelo ID do usuário
     if (userRole === "perito" || userRole === "assistente") {
-      url.searchParams.append("user", userId); // Perito e Assistente veem apenas seus casos
+      url.searchParams.append("user", userId);
     }
 
+    // Adicionando os parâmetros de consulta à URL
     const params = { status: statusValue, date: dateValue, search: searchValue };
-
-    Object.keys(params).forEach(key => {
-      if (params[key]) {
-        url.searchParams.append(key, params[key]);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        url.searchParams.append(key, value);
       }
     });
 
