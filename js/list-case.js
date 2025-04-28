@@ -6,93 +6,107 @@ function toggleSubMenu(button) {
 
 // Função para buscar os casos filtrados
 async function fetchCases() {
-const filterStatus = document.getElementById('filter-status');
-const filterDate = document.getElementById('filter-date');
-const searchCase = document.getElementById('search-case');
-const caseListContainer = document.querySelector('.cases-list-container');
+  const filterStatus = document.getElementById('filter-status');
+  const filterDate = document.getElementById('filter-date');
+  const searchCase = document.getElementById('search-case');
+  const caseListContainer = document.querySelector('.cases-list-container');
 
-const statusValue = filterStatus.value;
-const dateValue = filterDate.value.toLowerCase();
-const searchValue = searchCase.value.toLowerCase();
+  const statusValue = filterStatus.value;
+  const dateValue = filterDate.value.toLowerCase();
+  const searchValue = searchCase.value.toLowerCase();
 
-try {
-  // Construção da URL com os filtros
-  const url = new URL('https://laudos-pericias.onrender.com/api/casos');
-  const params = {
-    status: statusValue,
-    date: dateValue,
-    search: searchValue
-  };
+  try {
+    // Construção da URL com os filtros
+    const url = new URL('https://laudos-pericias.onrender.com/api/cases'); // Corrigido endpoint
+    const params = {
+      status: statusValue,
+      date: dateValue,
+      search: searchValue
+    };
 
-  // Adicionando os parâmetros de consulta à URL
-  Object.keys(params).forEach(key => {
-    if (params[key]) {
-      url.searchParams.append(key, params[key]);
+    // Adicionando os parâmetros de consulta à URL
+    Object.keys(params).forEach(key => {
+      if (params[key]) {
+        url.searchParams.append(key, params[key]);
+      }
+    });
+
+    // Fazendo a requisição GET para o backend com autenticação JWT
+    const response = await fetch(url, {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`, // Adicionando JWT
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) throw new Error("Erro ao buscar casos");
+
+    const cases = await response.json();
+
+    // Limpar a lista de casos antes de adicionar os novos
+    caseListContainer.innerHTML = '';
+
+    if (cases.length === 0) {
+      caseListContainer.innerHTML = "<p class='error-message'>Nenhum caso encontrado.</p>";
+      return;
     }
-  });
 
-  // Fazendo a requisição GET para o backend
-  const response = await fetch(url);
-  const cases = await response.json();
+    // Adicionando os casos retornados pela API
+    cases.forEach((caseItem) => {
+      const caseElement = document.createElement('div');
+      caseElement.classList.add('case-list-item');
 
-  // Limpar a lista de casos antes de adicionar os novos
-  caseListContainer.innerHTML = '';
-
-  // Adicionando os casos retornados pela API
-  cases.forEach((caseItem) => {
-    const caseElement = document.createElement('div');
-    caseElement.classList.add('case-list-item');
-    
-    caseElement.innerHTML = `
-      <div class="case-list-content" onclick="window.location='view-case.html?id=${caseItem.id}'">
-        <div class="case-list-main">
-          <span class="case-id">#${caseItem.id}</span>
-          <h3 class="case-title">${caseItem.title}</h3>
-          <span class="case-status ${getStatusClass(caseItem.status)}">${caseItem.status}</span>
-        </div>
-        <div class="case-list-details">
-          <p class="case-description">${caseItem.description}</p>
-          <div class="case-meta">
-            <span><i class="fas fa-calendar-alt"></i> ${formatDate(caseItem.date)}</span>
-            <span><i class="fas fa-user-md"></i> ${caseItem.expert}</span>
+      caseElement.innerHTML = `
+        <div class="case-list-content" onclick="window.location='view-case.html?id=${caseItem._id}'">
+          <div class="case-list-main">
+            <span class="case-id">#${caseItem._id}</span>
+            <h3 class="case-title">${caseItem.title}</h3>
+            <span class="case-status ${getStatusClass(caseItem.status)}">${caseItem.status}</span>
+          </div>
+          <div class="case-list-details">
+            <p class="case-description">${caseItem.description}</p>
+            <div class="case-meta">
+              <span><i class="fas fa-calendar-alt"></i> ${formatDate(caseItem.openDate)}</span>
+              <span><i class="fas fa-user-md"></i> ${caseItem.expert}</span>
+            </div>
           </div>
         </div>
-      </div>
-    `;
-    
-    caseListContainer.appendChild(caseElement);
-  });
-} catch (error) {
-  console.error('Erro ao buscar casos:', error);
-}
+      `;
+
+      caseListContainer.appendChild(caseElement);
+    });
+  } catch (error) {
+    console.error("Erro ao buscar casos:", error);
+    caseListContainer.innerHTML = "<p class='error-message'>Erro ao carregar casos. Tente novamente.</p>";
+  }
 }
 
 // Função para obter a classe de status do caso (ajuste conforme necessário)
 function getStatusClass(status) {
-switch (status) {
-  case 'aberto':
-    return 'status-aberto';
-  case 'em andamento':
-    return 'status-em-andamento';
-  case 'pendente':
-    return 'status-pendente';
-  case 'concluído':
-    return 'status-concluido';
-  default:
-    return '';
-}
+  switch (status) {
+    case 'aberto':
+      return 'status-aberto';
+    case 'em andamento':
+      return 'status-em-andamento';
+    case 'pendente':
+      return 'status-pendente';
+    case 'concluído':
+      return 'status-concluido';
+    default:
+      return '';
+  }
 }
 
-// Função para formatar as datas (ajuste conforme necessário)
+// Função para formatar as datas
 function formatDate(dateString) {
-const options = { year: 'numeric', month: 'long', day: 'numeric' };
-const date = new Date(dateString);
-return date.toLocaleDateString('pt-BR', options);
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', options);
 }
 
-// Função de filtro de casos (chama a função fetchCases)
+// Função de filtro de casos
 function filterCases() {
-fetchCases();
+  fetchCases();
 }
 
 // Adicionar ouvintes de eventos aos filtros
