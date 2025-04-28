@@ -41,10 +41,11 @@ document.getElementById("loginForm").addEventListener("submit", async function (
 
         if (response.ok) {
             // Login bem-sucedido
-            localStorage.setItem('token', data.token); // Salva o token JWT
+            localStorage.setItem('token', data.accessToken); // Salva o token JWT
             localStorage.setItem('user', JSON.stringify(data.user)); // Salva dados do usuário, se quiser
 
-            window.location.href = "list-case.html"; // Redireciona para a página de casos
+            // Redireciona para a página de casos
+            window.location.href = "list-case.html"; 
         } else {
             mostrarSelecao(data.message || "Erro ao fazer login");
         }
@@ -67,6 +68,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Função para exibir mensagens de erro
 function mostrarSelecao(mensagem) {
     var erro = document.getElementById("mensagemErro");
     erro.innerHTML = mensagem;
