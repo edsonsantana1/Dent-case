@@ -12,12 +12,19 @@ async function fetchCases() {
   const caseListContainer = document.querySelector('.cases-list-container');
 
   const statusValue = filterStatus.value;
-  const dateValue = filterDate.value.toLowerCase();
+  const dateValue = filterDate.value;
   const searchValue = searchCase.value.toLowerCase();
+
+  // Verifica se o token está disponível
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Você precisa estar logado!");
+    return;
+  }
 
   try {
     // Construção da URL com os filtros
-    const url = new URL('https://laudos-pericias.onrender.com/api/cases'); // Corrigido endpoint
+    const url = new URL('https://laudos-pericias.onrender.com/api/cases');
     const params = {
       status: statusValue,
       date: dateValue,
@@ -31,22 +38,28 @@ async function fetchCases() {
       }
     });
 
+    // Exibe mensagem de carregamento
+    caseListContainer.innerHTML = "<p class='loading-message'>Carregando casos...</p>";
+
     // Fazendo a requisição GET para o backend com autenticação JWT
     const response = await fetch(url, {
       headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`, // Adicionando JWT
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       }
     });
 
-    if (!response.ok) throw new Error("Erro ao buscar casos");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.msg || "Erro ao buscar casos");
+    }
 
     const cases = await response.json();
 
     // Limpar a lista de casos antes de adicionar os novos
     caseListContainer.innerHTML = '';
 
-    if (cases.length === 0) {
+    if (!cases || cases.length === 0) {
       caseListContainer.innerHTML = "<p class='error-message'>Nenhum caso encontrado.</p>";
       return;
     }
