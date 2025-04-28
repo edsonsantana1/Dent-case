@@ -15,23 +15,31 @@ async function fetchCases() {
   const dateValue = filterDate.value;
   const searchValue = searchCase.value.toLowerCase();
 
-  // Verifica se o token está disponível
+  // Obtém o token do usuário
   const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("userRole"); // Pegando a role do usuário
+
+  console.log("Token armazenado:", token);
+  console.log("Role do usuário:", userRole);
+
   if (!token) {
     alert("Você precisa estar logado!");
+    window.location.href = "login.html";
+    return;
+  }
+
+  // Verifica se o usuário tem permissão para acessar casos
+  if (userRole !== "admin" && userRole !== "perito") {
+    alert("Você não tem permissão para acessar esta página.");
+    window.location.href = "dashboard.html"; // Redireciona para a página inicial
     return;
   }
 
   try {
-    // Construção da URL com os filtros
+    // Construção da URL com filtros
     const url = new URL('https://laudos-pericias.onrender.com/api/cases');
-    const params = {
-      status: statusValue,
-      date: dateValue,
-      search: searchValue
-    };
+    const params = { status: statusValue, date: dateValue, search: searchValue };
 
-    // Adicionando os parâmetros de consulta à URL
     Object.keys(params).forEach(key => {
       if (params[key]) {
         url.searchParams.append(key, params[key]);
@@ -49,14 +57,26 @@ async function fetchCases() {
       }
     });
 
+    console.log("Status da requisição:", response.status);
+
     if (!response.ok) {
+      if (response.status === 401) {
+        alert("Sessão expirada! Faça login novamente.");
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      } else if (response.status === 403) {
+        alert("Acesso negado! Você não tem permissão.");
+        window.location.href = "dashboard.html";
+      }
+      
       const errorData = await response.json();
       throw new Error(errorData.msg || "Erro ao buscar casos");
     }
 
     const cases = await response.json();
+    console.log("Casos recebidos:", cases);
 
-    // Limpar a lista de casos antes de adicionar os novos
+    // Limpar a lista antes de adicionar os novos
     caseListContainer.innerHTML = '';
 
     if (!cases || cases.length === 0) {
@@ -66,6 +86,8 @@ async function fetchCases() {
 
     // Adicionando os casos retornados pela API
     cases.forEach((caseItem) => {
+      if (!caseItem._id || !caseItem.title || !caseItem.status) return;
+
       const caseElement = document.createElement('div');
       caseElement.classList.add('case-list-item');
 
@@ -77,10 +99,10 @@ async function fetchCases() {
             <span class="case-status ${getStatusClass(caseItem.status)}">${caseItem.status}</span>
           </div>
           <div class="case-list-details">
-            <p class="case-description">${caseItem.description}</p>
+            <p class="case-description">${caseItem.description || "Sem descrição"}</p>
             <div class="case-meta">
               <span><i class="fas fa-calendar-alt"></i> ${formatDate(caseItem.openDate)}</span>
-              <span><i class="fas fa-user-md"></i> ${caseItem.expert}</span>
+              <span><i class="fas fa-user-md"></i> ${caseItem.expert || "Não informado"}</span>
             </div>
           </div>
         </div>
@@ -94,7 +116,7 @@ async function fetchCases() {
   }
 }
 
-// Função para obter a classe de status do caso (ajuste conforme necessário)
+// Função para obter a classe de status do caso
 function getStatusClass(status) {
   switch (status) {
     case 'aberto':
@@ -112,6 +134,8 @@ function getStatusClass(status) {
 
 // Função para formatar as datas
 function formatDate(dateString) {
+  if (!dateString) return "Data não informada";
+
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   const date = new Date(dateString);
   return date.toLocaleDateString('pt-BR', options);
