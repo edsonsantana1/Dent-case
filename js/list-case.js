@@ -15,12 +15,14 @@ async function fetchCases() {
   const dateValue = filterDate.value;
   const searchValue = searchCase.value.toLowerCase();
 
-  // Obtém o token do usuário
+  // Obtém o token do usuário e a role
   const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("userRole"); // Pegando a role do usuário
+  const userRole = localStorage.getItem("userRole");
+  const userId = localStorage.getItem("userId"); // ID do usuário
 
   console.log("Token armazenado:", token);
   console.log("Role do usuário:", userRole);
+  console.log("ID do usuário:", userId);
 
   if (!token) {
     alert("Você precisa estar logado!");
@@ -28,16 +30,14 @@ async function fetchCases() {
     return;
   }
 
-  // Verifica se o usuário tem permissão para acessar casos
-  if (userRole !== "admin" && userRole !== "perito") {
-    alert("Você não tem permissão para acessar esta página.");
-    window.location.href = "dashboard.html"; // Redireciona para a página inicial
-    return;
-  }
-
   try {
     // Construção da URL com filtros
     const url = new URL('https://laudos-pericias.onrender.com/api/cases');
+
+    if (userRole === "perito" || userRole === "assistente") {
+      url.searchParams.append("user", userId); // Perito e Assistente veem apenas seus casos
+    }
+
     const params = { status: statusValue, date: dateValue, search: searchValue };
 
     Object.keys(params).forEach(key => {
