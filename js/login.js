@@ -54,13 +54,6 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     }
 });
 
-function mostrarSelecao(mensagem) {
-    var erro = document.getElementById("mensagemErro");
-    erro.innerHTML = mensagem;
-    erro.style.color = "red";
-    erro.style.display = "block";
-}
-
 // Registro do Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -72,4 +65,11 @@ if ('serviceWorker' in navigator) {
                 console.log('Falha ao registrar o Service Worker:', error);
             });
     });
+}
+
+function mostrarSelecao(mensagem) {
+    var erro = document.getElementById("mensagemErro");
+    erro.innerHTML = mensagem;
+    erro.style.color = "red";
+    erro.style.display = "block";
 }
