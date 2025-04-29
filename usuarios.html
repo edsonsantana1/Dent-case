@@ -6,206 +6,44 @@
   <title>Usuários - Sistema Odonto-Legal</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-  <link rel="icon" sizes="192x192" href="imag/192.png">
-  <link rel="icon" sizes="512x512" href="imag/512.png">
-
 </head>
 <body>
-  <button class="menu-toggle" id="menu-toggle">
-    <i class="fas fa-bars"></i>
-  </button>
+  <button id="menu-toggle"><i class="fas fa-bars"></i></button>
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo-placeholder">
-        <img src="imag/logo2.png" alt="Login Imagem"  class="logo"/>
-    </div>
-    </div>
-        <a href="dashboard.html"><span class="material-symbols-outlined">home</span> Página Inicial</a>
-        <a href="list-case.html"><span class="material-symbols-outlined">folder</span> Casos</a>
-        <a href="usuarios.html" class="active"><span class="material-symbols-outlined">group</span> Gerenciamento de Usuários</a>
-        <a href="index.html"><span class="material-symbols-outlined">logout</span> Sair</a>
-    </aside>
+    <img src="imag/logo2.png" alt="Login Imagem" class="logo"/>
+    <a href="dashboard.html">Página Inicial</a>
+    <a href="list-case.html">Casos</a>
+    <a href="usuarios.html" class="active">Gerenciamento de Usuários</a>
+    <a href="index.html">Sair</a>
+  </aside>
 
   <div class="main-content">
-    <nav>
-      <h1>Gerenciamento de Usuários</h1>
-    </nav>
-
+    <nav><h1>Gerenciamento de Usuários</h1></nav>
     <div class="container">
       <header class="list-header">
-        <div class="search-box">
-          <input type="text" id="search-user" placeholder="Buscar por matrícula ou nome...">
-          <button class="btn btn-search"><i class="fas fa-search"></i></button>
-        </div>
+        <input type="text" id="search-user" placeholder="Buscar por matrícula ou nome...">
+        <button id="search-btn"><i class="fas fa-search"></i></button>
         <button class="btn btn-primary" onclick="openUserModal('new')">
           <i class="fas fa-plus"></i> Novo Usuário
         </button>
       </header>
 
       <div class="filters">
-        <div class="filter-group">
-          <label for="filter-role">Filtrar por tipo:</label>
-          <select id="filter-role">
-            <option value="all">Todos</option>
-            <option value="administrador">Administrador</option>
-            <option value="perito">Perito</option>
-            <option value="assistente">Assistente</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="filter-date">Ordenar por:</label>
-          <select id="filter-date">
-            <option value="recentes">Mais recentes</option>
-            <option value="antigos">Mais antigos</option>
-          </select>
-        </div>
+        <select id="filter-role">
+          <option value="all">Todos</option>
+          <option value="administrador">Administrador</option>
+          <option value="perito">Perito</option>
+          <option value="assistente">Assistente</option>
+        </select>
+        <select id="filter-date">
+          <option value="recentes">Mais recentes</option>
+          <option value="antigos">Mais antigos</option>
+        </select>
       </div>
 
-      <div class="users-list-container">
-        <!-- Item de usuário -->
-        <div class="user-list-item">
-          <div class="user-list-content" onclick="openUserModal('view', 'USR-001')">
-            <div class="user-list-main">
-              <span class="user-id">#USR-001</span>
-              <h3 class="user-name">Dr. Carlos Silva</h3>
-              <span class="user-role role-perito">Perito</span>
-            </div>
-            <div class="user-list-details">
-              <p class="user-email">carlos.silva@odontolegal.com</p>
-              <div class="user-meta">
-                <span><i class="fas fa-id-card"></i> Matrícula: 2023001</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Outros usuários seguem o mesmo padrão -->
-        <!-- #USR-002 -->
-        <div class="user-list-item">
-          <div class="user-list-content" onclick="openUserModal('view', 'USR-002')">
-            <div class="user-list-main">
-              <span class="user-id">#USR-002</span>
-              <h3 class="user-name">Dra. Ana Oliveira</h3>
-              <span class="user-role role-administrador">Administrador</span>
-            </div>
-            <div class="user-list-details">
-              <p class="user-email">ana.oliveira@odontolegal.com</p>
-              <div class="user-meta">
-                <span><i class="fas fa-id-card"></i> Matrícula: 2023002</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- #USR-003 -->
-        <div class="user-list-item">
-          <div class="user-list-content" onclick="openUserModal('view', 'USR-003')">
-            <div class="user-list-main">
-              <span class="user-id">#USR-003</span>
-              <h3 class="user-name">Mariana Souza</h3>
-              <span class="user-role role-assistente">Assistente</span>
-            </div>
-            <div class="user-list-details">
-              <p class="user-email">mariana.souza@odontolegal.com</p>
-              <div class="user-meta">
-                <span><i class="fas fa-id-card"></i> Matrícula: 2023003</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- #USR-004 -->
-        <div class="user-list-item">
-          <div class="user-list-content" onclick="openUserModal('view', 'USR-004')">
-            <div class="user-list-main">
-              <span class="user-id">#USR-004</span>
-              <h3 class="user-name">Dr. Roberto Almeida</h3>
-              <span class="user-role role-perito">Perito</span>
-            </div>
-            <div class="user-list-details">
-              <p class="user-email">roberto.almeida@odontolegal.com</p>
-              <div class="user-meta">
-                <span><i class="fas fa-id-card"></i> Matrícula: 2023004</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pagination">
-        <button class="btn btn-pagination" disabled><i class="fas fa-chevron-left"></i></button>
-        <span class="page-number active">1</span>
-        <button class="btn btn-pagination"><i class="fas fa-chevron-right"></i></button>
-      </div>
+      <div class="users-list-container"></div>
     </div>
   </div>
-
-  <!-- Modal de usuário -->
-  <div id="userModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeUserModal()">&times;</span>
-      <h2 id="modalTitle">Editar Usuário</h2>
-      
-      <form id="userForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="userRole">Tipo de Usuário</label>
-            <select id="userRole" required>
-              <option value="administrador">Administrador</option>
-              <option value="perito">Perito</option>
-              <option value="assistente">Assistente</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="userName">Nome Completo</label>
-            <input type="text" id="userName" required>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="userEmail">E-mail</label>
-            <input type="email" id="userEmail" required>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="userPassword">Senha</label>
-            <input type="password" id="userPassword" placeholder="Deixe em branco para manter a atual">
-          </div>
-          <div class="form-group">
-            <label for="userConfirmPassword">Confirmar Senha</label>
-            <input type="password" id="userConfirmPassword">
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button>
-          <button type="button" class="btn btn-delete" id="deleteBtn" onclick="deleteUser()">Excluir</button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-<script>
-  const menuToggle = document.getElementById('menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('active');
-  });
-</script>
-
-</body>
-
-  <script src="js/usuario.js"></script>
-  
+  <script src="js/usuario.js" defer></script>
 </body>
 </html>
