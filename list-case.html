@@ -12,6 +12,7 @@
   <button class="menu-toggle" id="menu-toggle">
     <i class="fas fa-bars"></i>
   </button>
+  
   <aside class="sidebar">
     <div class="sidebar-header">
       <img src="imag/logo2.png" alt="Login Imagem" class="logo"/>
@@ -25,6 +26,7 @@
   <div class="main-content">
     <nav><h1>Lista de Casos</h1></nav>
     <div class="container">
+      
       <header class="list-header">
         <div class="search-box">
           <input type="text" id="search-case" placeholder="Buscar caso por ID ou título...">
@@ -33,6 +35,7 @@
         <a href="new-case.html" class="btn btn-primary"><i class="fas fa-plus"></i> Novo Caso</a>
       </header>
 
+      <!-- Filtros aprimorados -->
       <div class="filters">
         <select id="filter-status">
           <option value="all">Todos</option>
@@ -47,9 +50,12 @@
         </select>
       </div>
 
+      <!-- Contêiner atualizado para casos -->
       <div class="cases-list-container"></div>
+
     </div>
   </div>
+
   <script src="js/list-case.js" defer></script>
 </body>
 </html>

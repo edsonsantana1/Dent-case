@@ -56,7 +56,7 @@ async function fetchCases() {
   }
 }
 
-// Função para renderizar os casos
+// Função para renderizar os casos corretamente
 function renderCases(cases) {
   const caseListContainer = document.querySelector('.cases-list-container');
   caseListContainer.innerHTML = '';
@@ -70,11 +70,21 @@ function renderCases(cases) {
     const caseElement = document.createElement('div');
     caseElement.classList.add('case-list-item');
 
+    // Garantindo que todas as propriedades sejam carregadas corretamente
+    const titulo = caseItem.titulo || caseItem.title || "Título Indefinido";
+    const descricao = caseItem.descricao || caseItem.description || "Sem descrição";
+    const status = caseItem.status || "Status não definido";
+    const dataRegistro = caseItem.data || caseItem.createdAt || "Data não disponível";
+    const medico = caseItem.medicoResponsavel || caseItem.doctor || "Médico não informado";
+
     caseElement.innerHTML = `
       <div class="case-list-content" onclick="window.location='view-case.html?id=${caseItem._id}'">
         <span class="case-id">#${caseItem._id}</span>
-        <h3 class="case-title">${caseItem.title}</h3>
-        <span class="case-status ${getStatusClass(caseItem.status)}">${caseItem.status}</span>
+        <h3 class="case-title">${titulo}</h3>
+        <p class="case-description">${descricao}</p>
+        <span class="case-status ${getStatusClass(status)}">${status}</span>
+        <p class="case-date"><strong>Data:</strong> ${new Date(dataRegistro).toLocaleDateString()}</p>
+        <p class="case-doctor"><strong>Médico Responsável:</strong> ${medico}</p>
       </div>
     `;
 
