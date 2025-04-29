@@ -1,3 +1,10 @@
+// Função para alternar a exibição do submenu
+function toggleSubMenu(button) {
+  const subMenu = button.nextElementSibling;
+  subMenu.style.display = subMenu.style.display === "flex" ? "none" : "flex";
+}
+
+// Função para buscar casos filtrados
 async function fetchCases() {
   const caseListContainer = document.querySelector('.cases-list-container');
   const token = localStorage.getItem("token");
@@ -9,7 +16,7 @@ async function fetchCases() {
   }
 
   try {
-    // Construindo a URL sem filtros para teste
+    // Construindo a URL com filtros
     const url = new URL('https://laudos-pericias.onrender.com/api/cases');
     const filters = {
       status: document.getElementById('filter-status').value,
@@ -23,8 +30,10 @@ async function fetchCases() {
       }
     });
 
+    // Exibe mensagem de carregamento
     caseListContainer.innerHTML = "<p class='loading-message'>Carregando casos...</p>";
 
+    // Fazendo requisição GET com autenticação JWT
     const response = await fetch(url, {
       headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
     });
@@ -47,9 +56,10 @@ async function fetchCases() {
   }
 }
 
+// Função para renderizar os casos corretamente
 function renderCases(cases) {
   const caseListContainer = document.querySelector('.cases-list-container');
-  caseListContainer.innerHTML = ''; // Limpa antes de renderizar
+  caseListContainer.innerHTML = '';
 
   if (!cases.length) {
     caseListContainer.innerHTML = "<p class='error-message'>Nenhum caso encontrado.</p>";
@@ -57,22 +67,20 @@ function renderCases(cases) {
   }
 
   cases.forEach(caseItem => {
-    if (!caseItem.caseId || caseItem.caseId === "001" || caseItem.caseId === "ID não disponível") {
-      return;
-    }
-
     const caseElement = document.createElement('div');
     caseElement.classList.add('case-list-item');
 
-    const caseId = caseItem.caseId;
-    const descricao = caseItem.description || "Sem descrição";
+    // Garantindo que todas as propriedades sejam carregadas corretamente
+    const titulo = caseItem.titulo || caseItem.title || "Título Indefinido";
+    const descricao = caseItem.descricao || caseItem.description || "Sem descrição";
     const status = caseItem.status || "Status não definido";
-    const dataRegistro = caseItem.createdAt || "Data não disponível";
-    const medico = caseItem.doctor || "Médico não informado";
+    const dataRegistro = caseItem.data || caseItem.createdAt || "Data não disponível";
+    const medico = caseItem.medicoResponsavel || caseItem.doctor || "Médico não informado";
 
     caseElement.innerHTML = `
       <div class="case-list-content" onclick="window.location='view-case.html?id=${caseItem._id}'">
-        <h3 class="case-title">${caseId}</h3>
+        <span class="case-id">#${caseItem._id}</span>
+        <h3 class="case-title">${titulo}</h3>
         <p class="case-description">${descricao}</p>
         <span class="case-status ${getStatusClass(status)}">${status}</span>
         <p class="case-date"><strong>Data:</strong> ${new Date(dataRegistro).toLocaleDateString()}</p>
@@ -84,11 +92,20 @@ function renderCases(cases) {
   });
 }
 
-// Corrigir layout
-document.querySelector('.cases-list-container').style.width = "100%";
+// Função para obter a classe de status do caso
+function getStatusClass(status) {
+  return {
+    'aberto': 'status-aberto',
+    'em andamento': 'status-em-andamento',
+    'pendente': 'status-pendente',
+    'concluído': 'status-concluido'
+  }[status] || '';
+}
 
+// Ouvintes de eventos para filtros
 document.getElementById('filter-status').addEventListener('change', fetchCases);
 document.getElementById('filter-date').addEventListener('change', fetchCases);
 document.getElementById('search-case').addEventListener('input', fetchCases);
 
+// Inicializa a busca ao carregar a página
 window.addEventListener('load', fetchCases);
