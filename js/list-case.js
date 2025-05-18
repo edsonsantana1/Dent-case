@@ -6,10 +6,8 @@ menuToggle.addEventListener('click', () => {
   sidebar.classList.toggle('active');
 });
 
-// URL da API do Render
-const API_BASE_URL = 'https://laudos-pericias.onrender.com/api';
-
 // Variáveis globais
+const API_BASE_URL = 'https://laudos-pericias.onrender.com/api';
 let allCases = [];
 let currentPage = 1;
 const casesPerPage = 10;
@@ -33,7 +31,7 @@ async function loadCases() {
       </div>
     `;
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Pega o token salvo no login
 
     const response = await fetch(`${API_BASE_URL}/cases`, {
       method: 'GET',
@@ -61,16 +59,18 @@ async function loadCases() {
         <button class="btn btn-retry" id="retry-button">Tentar novamente</button>
       </div>
     `;
+
     document.getElementById('retry-button').addEventListener('click', loadCases);
   }
 }
 
-// Renderizar os casos
+// Renderizar os casos com base nos filtros
 function renderCases() {
   const statusValue = filterStatus.value;
   const dateValue = filterDate.value;
   const searchValue = searchInput.value.toLowerCase();
 
+  // Filtrar
   let filteredCases = allCases.filter(caseItem => {
     if (statusValue !== 'all' && caseItem.status !== statusValue) return false;
 
@@ -83,15 +83,18 @@ function renderCases() {
     return searchIn.some(field => field.includes(searchValue));
   });
 
+  // Ordenar
   filteredCases.sort((a, b) => {
     const dateA = new Date(a.createdAt);
     const dateB = new Date(b.createdAt);
     return dateValue === 'recentes' ? dateB - dateA : dateA - dateB;
   });
 
+  // Paginar
   const startIndex = (currentPage - 1) * casesPerPage;
   const paginatedCases = filteredCases.slice(startIndex, startIndex + casesPerPage);
 
+  // Exibir
   if (filteredCases.length === 0) {
     casesListContainer.innerHTML = `
       <div class="empty-message">
@@ -134,11 +137,12 @@ function renderCases() {
         </div>
       </div>
     `;
+    
     casesListContainer.appendChild(caseElement);
   });
 }
 
-// Paginação
+// Configurar paginação
 function setupPagination() {
   const statusValue = filterStatus.value;
   const searchValue = searchInput.value.toLowerCase();
@@ -156,12 +160,13 @@ function setupPagination() {
   });
 
   const totalPages = Math.ceil(filteredCases.length / casesPerPage);
+
   prevPageButton.disabled = currentPage === 1;
   nextPageButton.disabled = currentPage >= totalPages;
   currentPageSpan.textContent = currentPage;
 }
 
-// Eventos de filtro e navegação
+// Eventos
 filterStatus.addEventListener('change', () => {
   currentPage = 1;
   renderCases();
@@ -220,5 +225,5 @@ nextPageButton.addEventListener('click', () => {
   }
 });
 
-// Iniciar carregamento
+// Inicialização
 document.addEventListener('DOMContentLoaded', loadCases);
