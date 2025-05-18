@@ -1,97 +1,103 @@
-// Função para alternar a exibição do submenu
-function toggleSubMenu(button) {
-  const subMenu = button.nextElementSibling;
-  subMenu.style.display = subMenu.style.display === "flex" ? "none" : "flex";
-}
+const apiUrl = 'https://laudos-pericias.onrender.com/api/users'; // URL do back-end no Render
+const usersContainer = document.getElementById('users-list-container');
+const userForm = document.getElementById('userForm');
+const modal = document.getElementById('userModal');
+const modalTitle = document.getElementById('modalTitle');
 
-// Função para buscar todos os usuários, apenas se for administrador
-async function fetchUsers() {
-  const userListContainer = document.querySelector('.users-list-container');
-  const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("userRole");
+document.getElementById('menu-toggle').addEventListener('click', () => {
+  document.querySelector('.sidebar').classList.toggle('active');
+});
 
-  if (!token || userRole !== "administrador") {
-    alert("Apenas administradores podem gerenciar usuários!");
-    window.location.href = "dashboard.html";
-    return;
+function openUserModal(mode, userId = null) {
+  userForm.reset();
+  document.getElementById('userId').value = '';
+
+  if (mode === 'new') {
+    modalTitle.textContent = 'Novo Usuário';
+    document.getElementById('deleteBtn').style.display = 'none';
+  } else if (mode === 'view') {
+    fetch(`${apiUrl}/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        modalTitle.textContent = 'Editar Usuário';
+        document.getElementById('userId').value = data._id; // ou data.id dependendo da sua API
+        document.getElementById('userName').value = data.name; // ou data.nome
+        document.getElementById('userEmail').value = data.email;
+        document.getElementById('userRole').value = data.role; // ou data.tipo
+        document.getElementById('deleteBtn').style.display = 'inline-block';
+      });
   }
 
-  try {
-    const response = await fetch('https://laudos-pericias.onrender.com/api/users', {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-
-    if (!response.ok) throw new Error("Erro ao buscar usuários");
-
-    const users = await response.json();
-    renderUserList(users);
-  } catch (error) {
-    console.error("Erro ao buscar usuários:", error);
-    userListContainer.innerHTML = "<p class='error-message'>Erro ao carregar usuários.</p>";
-  }
+  modal.style.display = 'block';
 }
 
-// Função para renderizar os usuários na interface
-function renderUserList(users) {
-  const userListContainer = document.querySelector('.users-list-container');
-  userListContainer.innerHTML = '';
-
-  if (!users.length) {
-    userListContainer.innerHTML = "<p class='error-message'>Nenhum usuário encontrado.</p>";
-    return;
-  }
-
-  users.forEach(user => {
-    const userItem = document.createElement('div');
-    userItem.classList.add('user-list-item');
-    userItem.innerHTML = `
-      <div class="user-list-content" onclick="openUserModal('view', '${user._id}')">
-        <span class="user-id">#${user._id}</span>
-        <h3 class="user-name">${user.name}</h3>
-        <span class="user-role role-${user.role}">${user.role}</span>
-      </div>
-    `;
-    userListContainer.appendChild(userItem);
-  });
-}
-
-// Função para abrir o modal e carregar dados do usuário
-async function openUserModal(action, userId = null) {
-  const modal = document.getElementById('userModal');
-  const modalTitle = document.getElementById('modalTitle');
-  const deleteBtn = document.getElementById('deleteBtn');
-
-  if (action === 'new') {
-    modalTitle.textContent = 'Cadastrar Novo Usuário';
-    deleteBtn.style.display = 'none';
-    document.getElementById('userForm').reset();
-  } else {
-    modalTitle.textContent = 'Editar Usuário';
-    deleteBtn.style.display = 'block';
-    await loadUserData(userId);
-  }
-
-  modal.style.display = 'flex';
-}
-
-// Carregar dados do usuário ao abrir o modal
-async function loadUserData(userId) {
-  try {
-    const response = await fetch(`https://laudos-pericias.onrender.com/api/users/${userId}`);
-    const user = await response.json();
-
-    document.getElementById('userRole').value = user.role;
-    document.getElementById('userName').value = user.name;
-    document.getElementById('userEmail').value = user.email;
-  } catch (error) {
-    console.error("Erro ao carregar dados do usuário:", error);
-  }
-}
-
-// Fechar modal
 function closeUserModal() {
-  document.getElementById('userModal').style.display = 'none';
+  modal.style.display = 'none';
 }
 
-// Inicializa a busca ao carregar a página
-document.addEventListener('DOMContentLoaded', fetchUsers);
+function deleteUser() {
+  const id = document.getElementById('userId').value;
+  if (confirm('Deseja realmente excluir este usuário?')) {
+    fetch(`${apiUrl}/${id}`, {
+      method: 'DELETE'
+    }).then(() => {
+      closeUserModal();
+      loadUsers();
+    });
+  }
+}
+
+userForm.addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const id = document.getElementById('userId').value;
+  const data = {
+    name: document.getElementById('userName').value,
+    email: document.getElementById('userEmail').value,
+    role: document.getElementById('userRole').value,
+    password: document.getElementById('userPassword').value
+  };
+
+  const method = id ? 'PUT' : 'POST';
+  const endpoint = id ? `${apiUrl}/${id}` : apiUrl;
+
+  fetch(endpoint, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(() => {
+    closeUserModal();
+    loadUsers();
+  });
+});
+
+function loadUsers() {
+  fetch(apiUrl)
+    .then(res => res.json())
+    .then(users => {
+      usersContainer.innerHTML = '';
+      users.forEach(user => {
+        const item = document.createElement('div');
+        item.className = 'user-list-item';
+        item.innerHTML = `
+          <div class="user-list-content" onclick="openUserModal('view', '${user._id}')">
+            <div class="user-list-main">
+              <span class="user-id">#${user._id}</span>
+              <h3 class="user-name">${user.name}</h3>
+              <span class="user-role role-${user.role}">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
+            </div>
+            <div class="user-list-details">
+              <p class="user-email">${user.email}</p>
+              <div class="user-meta">
+                <span><i class="fas fa-id-card"></i> Matrícula: ${user.registration || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        usersContainer.appendChild(item);
+      });
+    });
+}
+
+// Carregar usuários ao iniciar
+loadUsers();

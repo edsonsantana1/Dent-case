@@ -1,38 +1,35 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casos - Sistema Odonto-Legal</title>
+    <title>Novo Caso - Sistema Odonto-Legal</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="icon" sizes="192x192" href="imag/192.png">
     <link rel="icon" sizes="512x512" href="imag/512.png">
-  
 </head>
-
 <body>
     <button class="menu-toggle" id="menu-toggle">
         <i class="fas fa-bars"></i>
-      </button>
+    </button>
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo-placeholder">
                 <img src="imag/logo2.png" alt="Login Imagem" class="logo" />
             </div>
         </div>
-        <a href="dashboard.html"><span class="material-symbols-outlined">home</span> Página Inicial</a>
-        <a href="casos.html" class="active"><span class="material-symbols-outlined">folder</span> Casos</a>
+        <a href="dashboard.html"><span class="material-symbols-outlined">bar_chart</span> Dashboard</a>
+        <a href="list-case.html" class="active"><span class="material-symbols-outlined">folder</span> Casos</a>
         <a href="usuarios.html"><span class="material-symbols-outlined">group</span> Gerenciamento de Usuários</a>
         <a href="index.html"><span class="material-symbols-outlined">logout</span> Sair</a>
     </aside>
 
     <div class="main-content">
         <nav>
-            <h1>Lista de Casos</h1>
+            <h1>Cadastrar Novo Caso</h1>
         </nav>
         <div class="container">
             <header class="main-header">
@@ -43,15 +40,15 @@
             </header>
 
             <div class="form-container">
-                <form id="case-form" action="/api/cases" method="POST">
+                <form id="case-form">
                     <!-- ID gerado automaticamente -->
                     <div class="form-group">
                         <label for="case-id">ID do Caso</label>
-                        <input type="text" id="case-id" name="caseId" value="CASO-XXXX" readonly>
+                        <input type="text" id="case-id" name="caseId" readonly>
                         <small>Gerado automaticamente pelo sistema</small>
                     </div>
 
-                    <!-- Status deve vir primeiro conforme backend -->
+                    <!-- Status -->
                     <div class="form-group">
                         <label for="case-status">Status*</label>
                         <select id="case-status" name="status" required>
@@ -75,10 +72,9 @@
 
                         <div class="form-group">
                             <label for="patient-dob">Data de Nascimento*</label>
-                            <input type="date" id="patient-dob" name="patientAge" required>
-                        </div>
-
-                        <!-- Removido o campo de idade numérica pois no backend o patientAge é Date -->
+                            <input type="date" id="patient-dob" name="patientDOB" required>
+                          </div>
+                          
                     </div>
 
                     <div class="form-row">
@@ -124,32 +120,18 @@
 
                     <div class="form-group">
                         <label for="incident-weapon">Instrumento/Arma (opcional)</label>
-                        <input type="text" id="incident-weapon" name="incidentWsapon">
+                        <input type="text" id="incident-weapon" name="incidentWeapon">
                     </div>
-
-                    <!-- Campo oculto para o usuário (deve ser preenchido pelo sistema) -->
-                    <input type="hidden" name="user" id="user-id" value="ID_DO_USUARIO_LOGADO">
 
                     <!-- Botões -->
                     <div class="form-actions">
                         <button type="reset" class="btn btn-secondary">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Salvar Caso</button>
-                        <button type="button" class="btn btn-success" id="generate-report">Gerar Relatório</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <script>
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
-      
-        menuToggle.addEventListener('click', () => {
-          sidebar.classList.toggle('active');
-        });
-      </script>
-    <!-- Javascript externo -->
     <script src="js/new-case.js"></script>
 </body>
-
 </html>

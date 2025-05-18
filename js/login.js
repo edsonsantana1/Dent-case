@@ -1,51 +1,72 @@
+// Evento de envio do formulário
 document.getElementById("loginForm").addEventListener("submit", async function (event) {
     event.preventDefault(); // Impede envio automático do formulário
 
-    const matricula = document.getElementById("matricula").value;
-    const senha = document.getElementById("senha").value;
-    const erro = document.getElementById("mensagemErro");
+    if (validarLogin()) {
+        const cargo = document.getElementById("cargo").value;
+        const matricula = document.getElementById("matricula").value;
+        const senha = document.getElementById("senha").value;
 
-    erro.innerHTML = "";
-    erro.style.display = "none";
+        try {
+            const resposta = await fetch('https://laudos-pericias.onrender.com/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    matricula: matricula,
+                    senha: senha
+                })
+            });
 
-    // Validação
-    if (!matricula || !senha) {
-        mostrarSelecao("Preencha todos os campos corretamente.");
-        return;
-    }
+            if (resposta.ok) {
+                const dados = await resposta.json();
+                localStorage.setItem('token', dados.accessToken); // Salva o token
 
-    try {
-        const response = await fetch('https://laudos-pericias.onrender.com/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ matricula, senha })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Login bem-sucedido
-            localStorage.setItem("token", data.accessToken);
-            localStorage.setItem("userRole", data.user.role); // Salva a role
-            localStorage.setItem("userId", data.user.id); // Salva o ID
-
-            console.log("Login realizado com sucesso!");
-            console.log("Token JWT:", localStorage.getItem("token"));
-            console.log("Role do usuário:", localStorage.getItem("userRole"));
-            console.log("ID do usuário:", localStorage.getItem("userId"));
-
-            // Redireciona para a página de casos
-            window.location.href = "list-case.html";  
-        } else {
-            mostrarSelecao(data.msg || "Erro ao fazer login");
+                window.location.href = "list-case.html"; // Redireciona após login
+            } else {
+                const erro = await resposta.json();
+                mostrarErro(erro.msg || "Falha no login. Verifique suas credenciais.");
+            }
+        } catch (erro) {
+            mostrarErro("Erro de conexão com o servidor.");
         }
-    } catch (error) {
-        console.error("Erro na requisição:", error);
-        mostrarSelecao("Erro de conexão com o servidor");
     }
 });
 
-// Registro do Service Worker
+// Validação dos campos
+function validarLogin() {
+    const cargo = document.getElementById("cargo").value;
+    const matricula = document.getElementById("matricula").value;
+    const senha = document.getElementById("senha").value;
+
+    if (cargo === '') {
+        mostrarErro("Por favor, selecione seu cargo na lista");
+        return false;
+    }
+
+    if (matricula.trim() === '') {
+        mostrarErro("Digite sua matrícula para continuar");
+        return false;
+    }
+
+    if (senha.trim() === '') {
+        mostrarErro("Digite sua senha");
+        return false;
+    }
+
+    return true;
+}
+
+// Exibe mensagens de erro
+function mostrarErro(mensagem) {
+    const erro = document.getElementById("mensagemErro");
+    erro.textContent = mensagem;
+    erro.style.color = "red";
+    erro.style.display = "block";
+}
+
+// Registro do Service Worker (opcional)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
@@ -56,12 +77,4 @@ if ('serviceWorker' in navigator) {
                 console.log('Falha ao registrar o Service Worker:', error);
             });
     });
-}
-
-// Função para exibir mensagens de erro
-function mostrarSelecao(mensagem) {
-    var erro = document.getElementById("mensagemErro");
-    erro.innerHTML = mensagem;
-    erro.style.color = "red";
-    erro.style.display = "block";
 }

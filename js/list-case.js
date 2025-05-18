@@ -6,11 +6,13 @@ menuToggle.addEventListener('click', () => {
   sidebar.classList.toggle('active');
 });
 
+// ✅ URL base da API (Render)
+const API_BASE_URL = 'https://laudos-pericias.onrender.com/api';
+
 // Variáveis globais
 let allCases = [];
 let currentPage = 1;
 const casesPerPage = 10;
-const API_BASE_URL = 'https://laudos-pericias.onrender.com/api'; // URL do backend no Render
 
 // Elementos do DOM
 const casesListContainer = document.getElementById('cases-list');
@@ -31,7 +33,7 @@ async function loadCases() {
       </div>
     `;
 
-    const token = localStorage.getItem('token'); // Pega o token salvo no login
+    const token = localStorage.getItem('token');
 
     const response = await fetch(`${API_BASE_URL}/cases`, {
       method: 'GET',
@@ -70,7 +72,6 @@ function renderCases() {
   const dateValue = filterDate.value;
   const searchValue = searchInput.value.toLowerCase();
 
-  // Filtrar
   let filteredCases = allCases.filter(caseItem => {
     if (statusValue !== 'all' && caseItem.status !== statusValue) return false;
 
@@ -83,18 +84,15 @@ function renderCases() {
     return searchIn.some(field => field.includes(searchValue));
   });
 
-  // Ordenar
   filteredCases.sort((a, b) => {
     const dateA = new Date(a.createdAt);
     const dateB = new Date(b.createdAt);
     return dateValue === 'recentes' ? dateB - dateA : dateA - dateB;
   });
 
-  // Paginar
   const startIndex = (currentPage - 1) * casesPerPage;
   const paginatedCases = filteredCases.slice(startIndex, startIndex + casesPerPage);
 
-  // Exibir
   if (filteredCases.length === 0) {
     casesListContainer.innerHTML = `
       <div class="empty-message">
@@ -137,7 +135,7 @@ function renderCases() {
         </div>
       </div>
     `;
-    
+
     casesListContainer.appendChild(caseElement);
   });
 }
