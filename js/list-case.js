@@ -1,111 +1,229 @@
-// Função para alternar a exibição do submenu
-function toggleSubMenu(button) {
-  const subMenu = button.nextElementSibling;
-  subMenu.style.display = subMenu.style.display === "flex" ? "none" : "flex";
-}
+// Menu toggle
+const menuToggle = document.getElementById('menu-toggle');
+const sidebar = document.querySelector('.sidebar');
 
-// Função para buscar casos filtrados
-async function fetchCases() {
-  const caseListContainer = document.querySelector('.cases-list-container');
-  const token = localStorage.getItem("token");
+menuToggle.addEventListener('click', () => {
+  sidebar.classList.toggle('active');
+});
 
-  if (!token) {
-    alert("Você precisa estar logado!");
-    window.location.href = "login.html";
-    return;
-  }
+// Variáveis globais
+let allCases = [];
+let currentPage = 1;
+const casesPerPage = 10;
+const API_BASE_URL = 'https://laudos-pericias.onrender.com/api'; // URL do backend no Render
 
+// Elementos do DOM
+const casesListContainer = document.getElementById('cases-list');
+const filterStatus = document.getElementById('filter-status');
+const filterDate = document.getElementById('filter-date');
+const searchInput = document.getElementById('search-case');
+const searchButton = document.getElementById('search-button');
+const prevPageButton = document.getElementById('prev-page');
+const nextPageButton = document.getElementById('next-page');
+const currentPageSpan = document.getElementById('current-page');
+
+// Carregar os casos do backend
+async function loadCases() {
   try {
-    // Construindo a URL com filtros
-    const url = new URL('https://laudos-pericias.onrender.com/api/cases');
-    const filters = {
-      status: document.getElementById('filter-status').value,
-      date: document.getElementById('filter-date').value,
-      search: document.getElementById('search-case').value.toLowerCase()
-    };
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value && value !== "all") {
-        url.searchParams.append(key, value);
-      }
-    });
-
-    // Exibe mensagem de carregamento
-    caseListContainer.innerHTML = "<p class='loading-message'>Carregando casos...</p>";
-
-    // Fazendo requisição GET com autenticação JWT
-    const response = await fetch(url, {
-      headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        alert("Sessão expirada! Faça login novamente.");
-        localStorage.removeItem("token");
-        window.location.href = "login.html";
-      } else {
-        throw new Error("Erro ao buscar casos");
-      }
-    }
-
-    const cases = await response.json();
-    renderCases(cases);
-  } catch (error) {
-    console.error("Erro ao buscar casos:", error);
-    caseListContainer.innerHTML = "<p class='error-message'>Erro ao carregar casos.</p>";
-  }
-}
-
-// Função para renderizar os casos corretamente
-function renderCases(cases) {
-  const caseListContainer = document.querySelector('.cases-list-container');
-  caseListContainer.innerHTML = '';
-
-  if (!cases.length) {
-    caseListContainer.innerHTML = "<p class='error-message'>Nenhum caso encontrado.</p>";
-    return;
-  }
-
-  cases.forEach(caseItem => {
-    const caseElement = document.createElement('div');
-    caseElement.classList.add('case-list-item');
-
-    // Garantindo que todas as propriedades sejam carregadas corretamente
-    const titulo = caseItem.titulo || caseItem.title || "Título Indefinido";
-    const descricao = caseItem.descricao || caseItem.description || "Sem descrição";
-    const status = caseItem.status || "Status não definido";
-    const dataRegistro = caseItem.data || caseItem.createdAt || "Data não disponível";
-    const medico = caseItem.medicoResponsavel || caseItem.doctor || "Médico não informado";
-
-    caseElement.innerHTML = `
-      <div class="case-list-content" onclick="window.location='view-case.html?id=${caseItem._id}'">
-        <span class="case-id">#${caseItem._id}</span>
-        <h3 class="case-title">${titulo}</h3>
-        <p class="case-description">${descricao}</p>
-        <span class="case-status ${getStatusClass(status)}">${status}</span>
-        <p class="case-date"><strong>Data:</strong> ${new Date(dataRegistro).toLocaleDateString()}</p>
-        <p class="case-doctor"><strong>Médico Responsável:</strong> ${medico}</p>
+    casesListContainer.innerHTML = `
+      <div class="loading-message">
+        <i class="fas fa-spinner fa-spin"></i> Carregando casos...
       </div>
     `;
 
-    caseListContainer.appendChild(caseElement);
+    const token = localStorage.getItem('token'); // Pega o token salvo no login
+
+    const response = await fetch(`${API_BASE_URL}/cases`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na resposta da API: ${response.status}`);
+    }
+
+    allCases = await response.json();
+    console.log('Casos retornados da API:', allCases);
+
+    renderCases();
+    setupPagination();
+  } catch (error) {
+    console.error('Erro ao carregar casos:', error);
+    casesListContainer.innerHTML = `
+      <div class="error-message">
+        <h3>Erro ao carregar casos</h3>
+        <p>Não foi possível carregar a lista de casos. Tente novamente mais tarde.</p>
+        <button class="btn btn-retry" id="retry-button">Tentar novamente</button>
+      </div>
+    `;
+
+    document.getElementById('retry-button').addEventListener('click', loadCases);
+  }
+}
+
+// Renderizar os casos com base nos filtros
+function renderCases() {
+  const statusValue = filterStatus.value;
+  const dateValue = filterDate.value;
+  const searchValue = searchInput.value.toLowerCase();
+
+  // Filtrar
+  let filteredCases = allCases.filter(caseItem => {
+    if (statusValue !== 'all' && caseItem.status !== statusValue) return false;
+
+    const searchIn = [
+      caseItem.caseId,
+      caseItem.patientName,
+      caseItem.description
+    ].map(item => (item || '').toLowerCase());
+
+    return searchIn.some(field => field.includes(searchValue));
+  });
+
+  // Ordenar
+  filteredCases.sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+    return dateValue === 'recentes' ? dateB - dateA : dateA - dateB;
+  });
+
+  // Paginar
+  const startIndex = (currentPage - 1) * casesPerPage;
+  const paginatedCases = filteredCases.slice(startIndex, startIndex + casesPerPage);
+
+  // Exibir
+  if (filteredCases.length === 0) {
+    casesListContainer.innerHTML = `
+      <div class="empty-message">
+        <h3>Nenhum caso encontrado</h3>
+        <p>Não há casos correspondentes aos critérios de busca.</p>
+      </div>
+    `;
+    return;
+  }
+
+  casesListContainer.innerHTML = '';
+  paginatedCases.forEach(caseItem => {
+    const caseElement = document.createElement('div');
+    caseElement.className = 'case-list-item';
+
+    const formattedDate = new Date(caseItem.createdAt).toLocaleDateString('pt-BR');
+
+    let statusClass = 'status-em-andamento';
+    if (caseItem.status === 'aberto') statusClass = 'status-aberto';
+    else if (caseItem.status === 'pendente') statusClass = 'status-pendente';
+    else if (caseItem.status === 'concluído') statusClass = 'status-concluido';
+
+    const incidentDescription = caseItem.incidentDescription || '';
+    const shortIncident = incidentDescription.substring(0, 50) + (incidentDescription.length > 50 ? '...' : '');
+    const shortDescription = (caseItem.description || '').substring(0, 100) + ((caseItem.description || '').length > 100 ? '...' : '');
+
+    caseElement.innerHTML = `
+      <div class="case-list-content" onclick="window.location='view-case.html?id=${caseItem._id}'">
+        <div class="case-list-main">
+          <span class="case-id">#${caseItem.caseId}</span>
+          <h3 class="case-title">${caseItem.patientName} - ${shortIncident}</h3>
+          <span class="case-status ${statusClass}">${caseItem.status}</span>
+        </div>
+        <div class="case-list-details">
+          <p class="case-description">${shortDescription}</p>
+          <div class="case-meta">
+            <span><i class="fas fa-calendar-alt"></i> ${formattedDate}</span>
+            <span><i class="fas fa-user-md"></i> ${caseItem.user?.name || 'Responsável não definido'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    casesListContainer.appendChild(caseElement);
   });
 }
 
-// Função para obter a classe de status do caso
-function getStatusClass(status) {
-  return {
-    'aberto': 'status-aberto',
-    'em andamento': 'status-em-andamento',
-    'pendente': 'status-pendente',
-    'concluído': 'status-concluido'
-  }[status] || '';
+// Configurar paginação
+function setupPagination() {
+  const statusValue = filterStatus.value;
+  const searchValue = searchInput.value.toLowerCase();
+
+  const filteredCases = allCases.filter(caseItem => {
+    if (statusValue !== 'all' && caseItem.status !== statusValue) return false;
+
+    const searchIn = [
+      caseItem.caseId,
+      caseItem.patientName,
+      caseItem.description
+    ].map(item => (item || '').toLowerCase());
+
+    return searchIn.some(field => field.includes(searchValue));
+  });
+
+  const totalPages = Math.ceil(filteredCases.length / casesPerPage);
+
+  prevPageButton.disabled = currentPage === 1;
+  nextPageButton.disabled = currentPage >= totalPages;
+  currentPageSpan.textContent = currentPage;
 }
 
-// Ouvintes de eventos para filtros
-document.getElementById('filter-status').addEventListener('change', fetchCases);
-document.getElementById('filter-date').addEventListener('change', fetchCases);
-document.getElementById('search-case').addEventListener('input', fetchCases);
+// Eventos
+filterStatus.addEventListener('change', () => {
+  currentPage = 1;
+  renderCases();
+  setupPagination();
+});
 
-// Inicializa a busca ao carregar a página
-window.addEventListener('load', fetchCases);
+filterDate.addEventListener('change', () => {
+  currentPage = 1;
+  renderCases();
+  setupPagination();
+});
+
+searchInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter') {
+    currentPage = 1;
+    renderCases();
+    setupPagination();
+  }
+});
+
+searchButton.addEventListener('click', () => {
+  currentPage = 1;
+  renderCases();
+  setupPagination();
+});
+
+prevPageButton.addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderCases();
+    setupPagination();
+  }
+});
+
+nextPageButton.addEventListener('click', () => {
+  const statusValue = filterStatus.value;
+  const searchValue = searchInput.value.toLowerCase();
+
+  const filteredCases = allCases.filter(caseItem => {
+    if (statusValue !== 'all' && caseItem.status !== statusValue) return false;
+
+    const searchIn = [
+      caseItem.caseId,
+      caseItem.patientName,
+      caseItem.description
+    ].map(item => (item || '').toLowerCase());
+
+    return searchIn.some(field => field.includes(searchValue));
+  });
+
+  const totalPages = Math.ceil(filteredCases.length / casesPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    renderCases();
+    setupPagination();
+  }
+});
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', loadCases);
