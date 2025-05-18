@@ -1,229 +1,201 @@
-// Menu toggle
-const menuToggle = document.getElementById('menu-toggle');
-const sidebar = document.querySelector('.sidebar');
+document.addEventListener('DOMContentLoaded', function () {
+  const API_BASE_URL = 'https://laudos-pericias.onrender.com/api';
 
-menuToggle.addEventListener('click', () => {
-  sidebar.classList.toggle('active');
-});
-
-// Variáveis globais
-const API_BASE_URL = 'https://laudos-pericias.onrender.com/api';
-let allCases = [];
-let currentPage = 1;
-const casesPerPage = 10;
-
-// Elementos do DOM
-const casesListContainer = document.getElementById('cases-list');
-const filterStatus = document.getElementById('filter-status');
-const filterDate = document.getElementById('filter-date');
-const searchInput = document.getElementById('search-case');
-const searchButton = document.getElementById('search-button');
-const prevPageButton = document.getElementById('prev-page');
-const nextPageButton = document.getElementById('next-page');
-const currentPageSpan = document.getElementById('current-page');
-
-// Carregar os casos do backend
-async function loadCases() {
-  try {
-    casesListContainer.innerHTML = `
-      <div class="loading-message">
-        <i class="fas fa-spinner fa-spin"></i> Carregando casos...
-      </div>
-    `;
-
-    const token = localStorage.getItem('token'); // Pega o token salvo no login
-
-    const response = await fetch(`${API_BASE_URL}/cases`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro na resposta da API: ${response.status}`);
-    }
-
-    allCases = await response.json();
-    console.log('Casos retornados da API:', allCases);
-
-    renderCases();
-    setupPagination();
-  } catch (error) {
-    console.error('Erro ao carregar casos:', error);
-    casesListContainer.innerHTML = `
-      <div class="error-message">
-        <h3>Erro ao carregar casos</h3>
-        <p>Não foi possível carregar a lista de casos. Tente novamente mais tarde.</p>
-        <button class="btn btn-retry" id="retry-button">Tentar novamente</button>
-      </div>
-    `;
-
-    document.getElementById('retry-button').addEventListener('click', loadCases);
+  // Função utilitária para pegar elementos com segurança
+  function getElementSafe(id) {
+    const el = document.getElementById(id);
+    if (!el) console.warn(`Elemento com id "${id}" não encontrado.`);
+    return el;
   }
-}
 
-// Renderizar os casos com base nos filtros
-function renderCases() {
-  const statusValue = filterStatus.value;
-  const dateValue = filterDate.value;
-  const searchValue = searchInput.value.toLowerCase();
+  // Menu toggle
+  const menuToggle = getElementSafe('menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
 
-  // Filtrar
-  let filteredCases = allCases.filter(caseItem => {
-    if (statusValue !== 'all' && caseItem.status !== statusValue) return false;
+  if (menuToggle) {
+    menuToggle.addEventListener('click', () => {
+      sidebar?.classList.toggle('active');
+    });
+  }
 
-    const searchIn = [
-      caseItem.caseId,
-      caseItem.patientName,
-      caseItem.description
-    ].map(item => (item || '').toLowerCase());
+  // Obter ID do caso pela URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const caseId = urlParams.get('id');
 
-    return searchIn.some(field => field.includes(searchValue));
-  });
-
-  // Ordenar
-  filteredCases.sort((a, b) => {
-    const dateA = new Date(a.createdAt);
-    const dateB = new Date(b.createdAt);
-    return dateValue === 'recentes' ? dateB - dateA : dateA - dateB;
-  });
-
-  // Paginar
-  const startIndex = (currentPage - 1) * casesPerPage;
-  const paginatedCases = filteredCases.slice(startIndex, startIndex + casesPerPage);
-
-  // Exibir
-  if (filteredCases.length === 0) {
-    casesListContainer.innerHTML = `
-      <div class="empty-message">
-        <h3>Nenhum caso encontrado</h3>
-        <p>Não há casos correspondentes aos critérios de busca.</p>
-      </div>
-    `;
+  if (!caseId) {
+    alert('Caso não encontrado.');
+    window.location.href = 'list-case.html';
     return;
   }
 
-  casesListContainer.innerHTML = '';
-  paginatedCases.forEach(caseItem => {
-    const caseElement = document.createElement('div');
-    caseElement.className = 'case-list-item';
+  // Obter dados do usuário
+  const userRole = localStorage.getItem('userRole');
+  const userId = localStorage.getItem('userId');
+  const token = localStorage.getItem('token');
 
-    const formattedDate = new Date(caseItem.createdAt).toLocaleDateString('pt-BR');
+  if (!token) {
+    alert('Você precisa estar logado para acessar esta página.');
+    window.location.href = 'login.html';
+    return;
+  }
 
-    let statusClass = 'status-em-andamento';
-    if (caseItem.status === 'aberto') statusClass = 'status-aberto';
-    else if (caseItem.status === 'pendente') statusClass = 'status-pendente';
-    else if (caseItem.status === 'concluído') statusClass = 'status-concluido';
+  // Elementos dos modais
+  const evidenceModal = getElementSafe('evidence-modal');
+  const reportModal = getElementSafe('report-modal');
+  const closeButtons = document.querySelectorAll('.close');
 
-    const incidentDescription = caseItem.incidentDescription || '';
-    const shortIncident = incidentDescription.substring(0, 50) + (incidentDescription.length > 50 ? '...' : '');
-    const shortDescription = (caseItem.description || '').substring(0, 100) + ((caseItem.description || '').length > 100 ? '...' : '');
+  closeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      if (evidenceModal) evidenceModal.style.display = 'none';
+      if (reportModal) reportModal.style.display = 'none';
+    });
+  });
 
-    caseElement.innerHTML = `
-      <div class="case-list-content" onclick="window.location='view-case.html?id=${caseItem._id}'">
-        <div class="case-list-main">
-          <span class="case-id">#${caseItem.caseId}</span>
-          <h3 class="case-title">${caseItem.patientName} - ${shortIncident}</h3>
-          <span class="case-status ${statusClass}">${caseItem.status}</span>
-        </div>
-        <div class="case-list-details">
-          <p class="case-description">${shortDescription}</p>
-          <div class="case-meta">
-            <span><i class="fas fa-calendar-alt"></i> ${formattedDate}</span>
-            <span><i class="fas fa-user-md"></i> ${caseItem.user?.name || 'Responsável não definido'}</span>
+  // Carregar detalhes do caso
+  async function loadCaseDetails() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/cases/${caseId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Caso não encontrado');
+      }
+
+      const caseData = await response.json();
+      console.log('Dados do caso:', caseData);
+
+      // Preencher informações básicas
+      getElementSafe('case-title').textContent = `${caseData.patientName || 'Sem nome'} - ${(caseData.incidentDescription || '').slice(0, 50)}${caseData.incidentDescription?.length > 50 ? '...' : ''}`;
+      getElementSafe('case-id').textContent = `#${caseData.caseId || caseData._id}`;
+      getElementSafe('case-status').textContent = caseData.status || 'Sem status';
+      getElementSafe('case-status').className = `case-status status-${(caseData.status || '').toLowerCase().replace(' ', '-')}`;
+      getElementSafe('case-description').textContent = caseData.description || 'Sem descrição';
+      getElementSafe('case-date').textContent = caseData.createdAt ? new Date(caseData.createdAt).toLocaleDateString('pt-BR') : 'Data não informada';
+      getElementSafe('case-expert').textContent = caseData.assignedUser?.name || 'Não informado';
+
+      // Preencher informações do paciente
+      getElementSafe('patient-name').textContent = caseData.patientName || 'Não informado';
+      getElementSafe('patient-dob').textContent = caseData.patientDOB ? new Date(caseData.patientDOB).toLocaleDateString('pt-BR') : 'Não informado';
+      getElementSafe('patient-gender').textContent = caseData.patientGender || 'Não informado';
+      getElementSafe('patient-id').textContent = caseData.patientID || 'Não informado';
+      getElementSafe('patient-contact').textContent = caseData.patientContact || 'Não informado';
+
+      // Preencher informações do incidente
+      getElementSafe('incident-date').textContent = caseData.incidentDate ? new Date(caseData.incidentDate).toLocaleString('pt-BR') : 'Não informado';
+      getElementSafe('incident-location').textContent = caseData.incidentLocation || 'Não informado';
+      getElementSafe('incident-description').textContent = caseData.incidentDescription || 'Não informado';
+      getElementSafe('incident-weapon').textContent = caseData.incidentWeapon || 'Não informado';
+
+      // Carregar mídias (imagens, vídeos, documentos)
+      loadMedia(caseData);
+
+      await loadEvidences();
+    } catch (error) {
+      console.error('Erro ao carregar caso:', error);
+      alert(`Erro ao carregar detalhes do caso: ${error.message}`);
+      window.location.href = 'list-case.html';
+    }
+  }
+
+  // Carregar mídias do caso
+  function loadMedia(caseData) {
+    const mediaContainer = getElementSafe('case-media-container');
+    if (!mediaContainer) return;
+
+    mediaContainer.innerHTML = '';
+
+    // Adicionar imagem se existir
+    if (caseData.imageUrl) {
+      const imgDiv = document.createElement('div');
+      imgDiv.className = 'media-item';
+      imgDiv.innerHTML = `
+        <h4>Imagem</h4>
+        <img src="${caseData.imageUrl}" alt="Imagem do caso" class="case-media">
+      `;
+      mediaContainer.appendChild(imgDiv);
+    }
+
+    // Adicionar vídeo se existir
+    if (caseData.videoUrl) {
+      const videoDiv = document.createElement('div');
+      videoDiv.className = 'media-item';
+      videoDiv.innerHTML = `
+        <h4>Vídeo</h4>
+        <video controls class="case-media">
+          <source src="${caseData.videoUrl}" type="video/mp4">
+          Seu navegador não suporta o elemento de vídeo.
+        </video>
+      `;
+      mediaContainer.appendChild(videoDiv);
+    }
+
+    // Adicionar documento se existir
+    if (caseData.documentUrl) {
+      const docDiv = document.createElement('div');
+      docDiv.className = 'media-item';
+      docDiv.innerHTML = `
+        <h4>Documento</h4>
+        <iframe src="${caseData.documentUrl}" class="case-document" frameborder="0"></iframe>
+        <a href="${caseData.documentUrl}" target="_blank" class="btn-download">Baixar documento</a>
+      `;
+      mediaContainer.appendChild(docDiv);
+    }
+
+    // Mostrar mensagem se não houver mídias
+    if (!caseData.imageUrl && !caseData.videoUrl && !caseData.documentUrl) {
+      mediaContainer.innerHTML = '<p class="no-media">Nenhuma mídia disponível para este caso.</p>';
+    }
+  }
+
+  // Carregar evidências
+  async function loadEvidences() {
+    const evidenceList = getElementSafe('evidence-list');
+    const emptyMessage = getElementSafe('empty-evidence-message');
+  
+    try {
+      const response = await fetch(`${API_BASE_URL}/evidences/case/${caseId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+  
+      if (!response.ok) throw new Error('Erro ao carregar evidências');
+  
+      const evidences = await response.json();
+  
+      if (!evidences.length) {
+        if (emptyMessage) emptyMessage.style.display = 'block';
+        if (evidenceList) evidenceList.innerHTML = '';
+        return;
+      }
+  
+      if (emptyMessage) emptyMessage.style.display = 'none';
+      if (evidenceList) evidenceList.innerHTML = '';
+  
+      evidences.forEach(ev => {
+        const div = document.createElement('div');
+        div.className = 'evidence-item';
+        div.innerHTML = `
+          <div class="evidence-content">
+            <h4>${ev.collectionDate ? new Date(ev.collectionDate).toLocaleDateString('pt-BR') : 'Data não informada'} ${ev.collectionTime ? ' - ' + ev.collectionTime : ''}</h4>
+            <p>${ev.description || 'Descrição não informada'}</p>
+            ${ev.latitude && ev.longitude ? `<p><strong>Local:</strong> ${ev.latitude}, ${ev.longitude}</p>` : ''}
+            ${ev.imageUrl ? `<img src="${ev.imageUrl}" alt="Evidência" class="evidence-image">` : ''}
+            <p><strong>Adicionada por:</strong> ${ev.addedBy?.name || 'Usuário não informado'}</p>
           </div>
-        </div>
-      </div>
-    `;
-    
-    casesListContainer.appendChild(caseElement);
-  });
-}
-
-// Configurar paginação
-function setupPagination() {
-  const statusValue = filterStatus.value;
-  const searchValue = searchInput.value.toLowerCase();
-
-  const filteredCases = allCases.filter(caseItem => {
-    if (statusValue !== 'all' && caseItem.status !== statusValue) return false;
-
-    const searchIn = [
-      caseItem.caseId,
-      caseItem.patientName,
-      caseItem.description
-    ].map(item => (item || '').toLowerCase());
-
-    return searchIn.some(field => field.includes(searchValue));
-  });
-
-  const totalPages = Math.ceil(filteredCases.length / casesPerPage);
-
-  prevPageButton.disabled = currentPage === 1;
-  nextPageButton.disabled = currentPage >= totalPages;
-  currentPageSpan.textContent = currentPage;
-}
-
-// Eventos
-filterStatus.addEventListener('change', () => {
-  currentPage = 1;
-  renderCases();
-  setupPagination();
-});
-
-filterDate.addEventListener('change', () => {
-  currentPage = 1;
-  renderCases();
-  setupPagination();
-});
-
-searchInput.addEventListener('keypress', e => {
-  if (e.key === 'Enter') {
-    currentPage = 1;
-    renderCases();
-    setupPagination();
+        `;
+        if (evidenceList) evidenceList.appendChild(div);
+      });
+  
+    } catch (error) {
+      console.error('Erro ao carregar evidências:', error);
+      if (emptyMessage) {
+        emptyMessage.style.display = 'block';
+        emptyMessage.innerHTML = '<p>Erro ao carregar evidências. Tente recarregar a página.</p>';
+      }
+    }
   }
+
+  // Inicialização
+  loadCaseDetails();
 });
-
-searchButton.addEventListener('click', () => {
-  currentPage = 1;
-  renderCases();
-  setupPagination();
-});
-
-prevPageButton.addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderCases();
-    setupPagination();
-  }
-});
-
-nextPageButton.addEventListener('click', () => {
-  const statusValue = filterStatus.value;
-  const searchValue = searchInput.value.toLowerCase();
-
-  const filteredCases = allCases.filter(caseItem => {
-    if (statusValue !== 'all' && caseItem.status !== statusValue) return false;
-
-    const searchIn = [
-      caseItem.caseId,
-      caseItem.patientName,
-      caseItem.description
-    ].map(item => (item || '').toLowerCase());
-
-    return searchIn.some(field => field.includes(searchValue));
-  });
-
-  const totalPages = Math.ceil(filteredCases.length / casesPerPage);
-  if (currentPage < totalPages) {
-    currentPage++;
-    renderCases();
-    setupPagination();
-  }
-});
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', loadCases);

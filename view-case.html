@@ -10,55 +10,84 @@
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
   <link rel="icon" sizes="192x192" href="imag/192.png">
   <link rel="icon" sizes="512x512" href="imag/512.png">
+  <!-- Meta tags adicionais para melhorar SEO e acessibilidade -->
+  <meta name="description" content="Visualização detalhada de caso odonto-legal">
+  <meta name="theme-color" content="#ffffff">
 </head>
 <body>
-  <button class="menu-toggle" id="menu-toggle">
+  <button class="menu-toggle" id="menu-toggle" aria-label="Abrir/Fechar menu">
     <i class="fas fa-bars"></i>
   </button>
+  
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo-placeholder">
-        <img src="imag/logo2.png" alt="Login Imagem" class="logo" />
+        <img src="imag/logo2.png" alt="Logo do Sistema Odonto-Legal" class="logo" loading="lazy"/>
       </div>
     </div>
-    <a href="dashboard.html"><span class="material-symbols-outlined">bar_chart</span> Dashboard</a>
-    <a href="list-case.html" class="active"><span class="material-symbols-outlined">folder</span> Casos</a>
-    <a href="usuarios.html"><span class="material-symbols-outlined">group</span> Gerenciamento de Usuários</a>
-    <a href="index.html"><span class="material-symbols-outlined">logout</span> Sair</a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="material-symbols-outlined">bar_chart</span> Dashboard</a>
+      <a href="list-case.html" class="active"><span class="material-symbols-outlined">folder</span> Casos</a>
+      <a href="usuarios.html"><span class="material-symbols-outlined">group</span> Gerenciamento de Usuários</a>
+      <a href="index.html"><span class="material-symbols-outlined">logout</span> Sair</a>
+    </nav>
   </aside>
 
   <div class="main-content">
-    <nav>
+    <nav class="main-nav">
       <h1>Detalhes do Caso</h1>
+      <div class="user-info">
+        <!-- Espaço para informações do usuário logado -->
+      </div>
     </nav>
 
     <div class="container">
       <!-- Cabeçalho do Caso -->
       <div class="case-header">
-        <h1 id="case-title"></h1>
+        <h1 id="case-title">Carregando...</h1>
         <div class="case-meta">
-          <span class="case-id" id="case-id"></span>
-          <span class="case-status" id="case-status"></span>
+          <span class="case-id" id="case-id">#---</span>
+          <span class="case-status" id="case-status">Carregando...</span>
         </div>
 
         <div class="case-details">
-          <h3>Informações do Caso</h3>
-          <p><strong>Descrição:</strong> <span id="case-description"></span></p>
-          <p><strong>Data de Criação:</strong> <span id="case-date"></span></p>
-          <p><strong>Responsável:</strong> <span id="case-expert"></span></p>
+          <section aria-labelledby="case-info-heading">
+            <h3 id="case-info-heading">Informações do Caso</h3>
+            <div class="info-grid">
+              <p><strong>Descrição:</strong> <span id="case-description">Carregando...</span></p>
+              <p><strong>Data de Criação:</strong> <span id="case-date">--/--/----</span></p>
+              <p><strong>Responsável:</strong> <span id="case-expert">Carregando...</span></p>
+            </div>
+          </section>
 
-          <h3>Informações do Paciente</h3>
-          <p><strong>Nome:</strong> <span id="patient-name"></span></p>
-          <p><strong>Data de Nascimento:</strong> <span id="patient-dob"></span></p>
-          <p><strong>Gênero:</strong> <span id="patient-gender"></span></p>
-          <p><strong>Documento:</strong> <span id="patient-id"></span></p>
-          <p><strong>Contato:</strong> <span id="patient-contact"></span></p>
+          <section aria-labelledby="patient-info-heading">
+            <h3 id="patient-info-heading">Informações do Paciente</h3>
+            <div class="info-grid">
+              <p><strong>Nome:</strong> <span id="patient-name">Não informado</span></p>
+              <p><strong>Data de Nascimento:</strong> <span id="patient-dob">Não informado</span></p>
+              <p><strong>Gênero:</strong> <span id="patient-gender">Não informado</span></p>
+              <p><strong>Documento:</strong> <span id="patient-id">Não informado</span></p>
+              <p><strong>Contato:</strong> <span id="patient-contact">Não informado</span></p>
+            </div>
+          </section>
 
-          <h3>Informações do Incidente</h3>
-          <p><strong>Data:</strong> <span id="incident-date"></span></p>
-          <p><strong>Local:</strong> <span id="incident-location"></span></p>
-          <p><strong>Descrição:</strong> <span id="incident-description"></span></p>
-          <p><strong>Instrumento/Arma:</strong> <span id="incident-weapon"></span></p>
+          <section aria-labelledby="incident-info-heading">
+            <h3 id="incident-info-heading">Informações do Incidente</h3>
+            <div class="info-grid">
+              <p><strong>Data:</strong> <span id="incident-date">Não informado</span></p>
+              <p><strong>Local:</strong> <span id="incident-location">Não informado</span></p>
+              <p><strong>Descrição:</strong> <span id="incident-description">Não informado</span></p>
+              <p><strong>Instrumento/Arma:</strong> <span id="incident-weapon">Não informado</span></p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Seção de Mídias -->
+        <div class="media-section" id="case-media-container">
+          <h3>Mídias do Caso</h3>
+          <div class="media-placeholder">
+            <p>Carregando mídias...</p>
+          </div>
         </div>
 
         <div class="case-actions">
@@ -85,44 +114,46 @@
       </div>
 
       <!-- Modal Adicionar Evidência -->
-      <div id="evidence-modal" class="modal">
+      <div id="evidence-modal" class="modal" role="dialog" aria-labelledby="evidence-modal-title" aria-hidden="true">
         <div class="modal-content">
-          <span class="close">&times;</span>
-          <h2>Adicionar Nova Evidência</h2>
+          <span class="close" aria-label="Fechar modal">&times;</span>
+          <h2 id="evidence-modal-title">Adicionar Nova Evidência</h2>
           <form id="evidence-form">
             <div class="form-row">
               <div class="form-group">
                 <label for="collection-date">Data da coleta:</label>
-                <input type="date" id="collection-date" required>
+                <input type="date" id="collection-date" required aria-required="true">
               </div>
               <div class="form-group">
                 <label for="collection-time">Hora:</label>
-                <input type="time" id="collection-time" required>
+                <input type="time" id="collection-time" required aria-required="true">
               </div>
             </div>
 
             <div class="form-group">
               <label for="evidence-description-field">Descrição:</label>
-              <textarea id="evidence-description-field" required></textarea>
+              <textarea id="evidence-description-field" required aria-required="true"></textarea>
             </div>
 
             <div class="form-group">
               <label for="evidence-location">Localização:</label>
               <div class="location-fields">
-                <input type="text" id="evidence-lat" placeholder="Latitude" class="location-input">
-                <input type="text" id="evidence-long" placeholder="Longitude" class="location-input">
-                <button type="button" id="get-location" class="btn btn-location"><i class="fas fa-map-marker-alt"></i> Usar Minha Localização</button>
+                <input type="text" id="evidence-lat" placeholder="Latitude" class="location-input" aria-label="Latitude">
+                <input type="text" id="evidence-long" placeholder="Longitude" class="location-input" aria-label="Longitude">
+                <button type="button" id="get-location" class="btn btn-location" aria-label="Usar minha localização atual">
+                  <i class="fas fa-map-marker-alt"></i> Usar Minha Localização
+                </button>
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label for="evidence-image-url">Imagem (URL):</label>
-                <input type="text" id="evidence-image-url" placeholder="Opcional">
+                <input type="url" id="evidence-image-url" placeholder="Opcional" aria-label="URL da imagem">
               </div>
               <div class="form-group">
                 <label for="evidence-file">Arquivo:</label>
-                <input type="file" id="evidence-file">
+                <input type="file" id="evidence-file" accept="image/*,.pdf,.doc,.docx" aria-label="Selecionar arquivo">
               </div>
             </div>
 
@@ -132,25 +163,55 @@
       </div>
 
       <!-- Modal Gerar Relatório -->
-      <div id="report-modal" class="modal">
+      <div id="report-modal" class="modal" role="dialog" aria-labelledby="report-modal-title" aria-hidden="true">
         <div class="modal-content">
-          <span class="close">&times;</span>
-          <h2>Gerar Relatório do Caso</h2>
+          <span class="close" aria-label="Fechar modal">&times;</span>
+          <h2 id="report-modal-title">Gerar Relatório do Caso</h2>
           <form id="report-form">
             <div class="form-group">
               <label for="report-title">Título do Relatório:</label>
-              <input type="text" id="report-title" required>
+              <input type="text" id="report-title" required aria-required="true">
             </div>
 
             <div class="form-group">
               <label for="report-notes">Observações Adicionais:</label>
-              <textarea id="report-notes" rows="4"></textarea>
+              <textarea id="report-notes" rows="4" aria-label="Observações adicionais para o relatório"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="report-template">Modelo de Relatório:</label>
+              <select id="report-template" aria-label="Selecione um modelo de relatório">
+                <option value="default">Padrão</option>
+                <option value="detailed">Detalhado</option>
+                <option value="summary">Resumido</option>
+              </select>
             </div>
 
             <button type="submit" class="btn btn-submit">Gerar Relatório PDF</button>
           </form>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação -->
+  <div id="confirmation-modal" class="modal" role="dialog" aria-labelledby="confirmation-modal-title" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close-modal" aria-label="Fechar modal">&times;</span>
+      <h3 id="confirmation-modal-title">Confirmação</h3>
+      <p id="confirmation-message">Tem certeza que deseja realizar esta ação?</p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="modal-confirm" class="btn btn-danger">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+      <i class="fas fa-spinner fa-spin fa-3x"></i>
+      <p id="loading-message">Processando...</p>
     </div>
   </div>
 
