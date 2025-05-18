@@ -55,28 +55,22 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!response.ok) throw new Error('Erro ao verificar permissões.');
   
         const caseData = await response.json();
-        // Definindo se usuário é dono do caso (perito que criou)
-        const isOwner = caseData.assignedUser?._id === userId || caseData.assignedUser === userId;
+        const isOwner = caseData.assignedUser?.toString() === userId;
   
-        // Controle dos botões conforme regra de permissões:
-        // admin vê tudo
         if (userRole === 'admin') {
           getElementSafe('edit-case')?.style.setProperty('display', 'inline-block');
           getElementSafe('delete-case')?.style.setProperty('display', 'inline-block');
           getElementSafe('add-evidence')?.style.setProperty('display', 'inline-block');
-        }
-        // perito pode editar e adicionar evidências se for dono, mas não deletar caso
-        else if (userRole === 'perito') {
+        } else if (userRole === 'perito') {
           getElementSafe('edit-case')?.style.setProperty('display', isOwner ? 'inline-block' : 'none');
           getElementSafe('delete-case')?.style.setProperty('display', 'none');
           getElementSafe('add-evidence')?.style.setProperty('display', isOwner ? 'inline-block' : 'none');
-        }
-        // assistente só adiciona evidências nos casos que participa (assumindo que isOwner = pertence ao caso)
-        else if (userRole === 'assistente') {
+        } else if (userRole === 'assistente') {
           getElementSafe('edit-case')?.style.setProperty('display', 'none');
           getElementSafe('delete-case')?.style.setProperty('display', 'none');
           getElementSafe('add-evidence')?.style.setProperty('display', isOwner ? 'inline-block' : 'none');
         }
+  
       } catch (error) {
         console.error('Erro ao configurar UI:', error);
       }
@@ -94,17 +88,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
   
         const caseData = await response.json();
+        console.log('Dados do caso:', caseData);
   
-        // Preenche dados na página
-        getElementSafe('case-title').textContent = `${caseData.patientName} - ${caseData.incidentDescription?.slice(0, 50) ?? ''}${caseData.incidentDescription && caseData.incidentDescription.length > 50 ? '...' : ''}`;
+        getElementSafe('case-title').textContent = `${caseData.patientName} - ${caseData.incidentDescription.slice(0, 50)}${caseData.incidentDescription.length > 50 ? '...' : ''}`;
         getElementSafe('case-id').textContent = `#${caseData.caseId}`;
-        getElementSafe('case-status').textContent = caseData.status || '';
-        getElementSafe('case-status').className = `case-status status-${caseData.status?.toLowerCase().replace(' ', '-') || ''}`;
-        getElementSafe('case-description').textContent = caseData.description || '';
-        getElementSafe('case-date').textContent = caseData.createdAt ? new Date(caseData.createdAt).toLocaleDateString('pt-BR') : '';
+        getElementSafe('case-status').textContent = caseData.status;
+        getElementSafe('case-status').className = `case-status status-${caseData.status.toLowerCase().replace(' ', '-')}`;
+        getElementSafe('case-description').textContent = caseData.description;
+        getElementSafe('case-date').textContent = new Date(caseData.createdAt).toLocaleDateString('pt-BR');
         getElementSafe('case-expert').textContent = caseData.assignedUser?.name || 'Não informado';
   
-        getElementSafe('patient-name').textContent = caseData.patientName || 'Não informado';
+        getElementSafe('patient-name').textContent = caseData.patientName;
         getElementSafe('patient-dob').textContent = caseData.patientDOB ? new Date(caseData.patientDOB).toLocaleDateString('pt-BR') : 'Não informado';
         getElementSafe('patient-gender').textContent = caseData.patientGender || 'Não informado';
         getElementSafe('patient-id').textContent = caseData.patientID || 'Não informado';
@@ -169,28 +163,24 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
   
-    // Abrir modal de adicionar evidência
     getElementSafe('add-evidence')?.addEventListener('click', () => {
       const today = new Date().toISOString().split('T')[0];
       getElementSafe('collection-date').value = today;
       if (evidenceModal) evidenceModal.style.display = 'block';
     });
   
-    // Envio do formulário de evidência
     getElementSafe('evidence-form')?.addEventListener('submit', async function (e) {
       e.preventDefault();
-  
-      const lat = getElementSafe('evidence-lat').value.trim();
-      const long = getElementSafe('evidence-long').value.trim();
   
       const evidenceData = {
         caseId: caseId,
         collectionDate: getElementSafe('collection-date').value || new Date().toISOString(),
         collectionTime: getElementSafe('collection-time').value || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        description: getElementSafe('evidence-description-field').value.trim(),
-        latitude: lat || null,
-        longitude: long || null,
-        imageUrl: getElementSafe('evidence-image-url').value.trim() || null,
+        description: getElementSafe('evidence-description-field').value,
+        location: getElementSafe('evidence-lat').value && getElementSafe('evidence-long').value
+          ? `${getElementSafe('evidence-lat').value}, ${getElementSafe('evidence-long').value}`
+          : null,
+        imageUrl: getElementSafe('evidence-image-url').value || null,
         addedBy: userId
       };
   
@@ -226,14 +216,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   
-    // Editar caso
     getElementSafe('edit-case')?.addEventListener('click', () => {
       window.location.href = `edit-case.html?id=${caseId}`;
     });
   
-    // Excluir caso
     getElementSafe('delete-case')?.addEventListener('click', async () => {
-      if (!confirm('Tem certeza que deseja excluir este caso? Essa ação é irreversível.')) return;
+      if (!confirm('Tem certeza que deseja excluir este caso permanentemente?')) return;
   
       try {
         const response = await fetch(`${API_BASE_URL}/cases/${caseId}`, {
@@ -250,16 +238,12 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href = 'list-case.html';
   
       } catch (error) {
-        console.error('Erro ao excluir caso:', error);
-        alert(`Falha ao excluir caso: ${error.message}`);
+        console.error('Erro:', error);
+        alert(`Erro ao excluir caso: ${error.message}`);
       }
     });
   
-    // Inicialização
-    (async () => {
-      await setupUI();
-      await loadCaseDetails();
-    })();
-  
+    setupUI();
+    loadCaseDetails();
   });
   
