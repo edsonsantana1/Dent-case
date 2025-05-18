@@ -21,28 +21,27 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
   
-    async function setupUI(caseData) {
-      const isOwner = caseData.assignedUser?._id === userId;
-      const isParticipant = caseData.assistants?.some(a => a._id === userId);
+    async function setupUI() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/cases/${caseId}`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!res.ok) throw new Error('Permissão negada ou caso não existe');
   
-      // Botões
-      const deleteBtn = getElementSafe('delete-case');
-      const editBtn = getElementSafe('edit-case');
-      const addEvidenceBtn = getElementSafe('add-evidence');
+        const caseData = await res.json();
+        const isOwner = caseData.assignedUser?._id === userId;
   
-      // Regras
-      if (deleteBtn) {
-        deleteBtn.style.display = (userRole === 'admin' || (userRole === 'perito' && isOwner)) ? 'inline-block' : 'none';
-      }
-      if (editBtn) {
-        editBtn.style.display = (userRole === 'admin' || (userRole === 'perito' && isOwner)) ? 'inline-block' : 'none';
-      }
-      if (addEvidenceBtn) {
-        addEvidenceBtn.style.display = (
-          userRole === 'admin' ||
-          (userRole === 'perito' && isOwner) ||
-          (userRole === 'assistente' && isParticipant)
-        ) ? 'inline-block' : 'none';
+        const deleteBtn = getElementSafe('delete-case');
+        if (deleteBtn) {
+          deleteBtn.style.display = (userRole === 'admin' || isOwner) ? 'inline-block' : 'none';
+        }
+  
+      } catch (err) {
+        console.error('Erro ao configurar UI:', err);
+        alert('Erro ao configurar interface: ' + err.message);
       }
     }
   
@@ -54,10 +53,14 @@ document.addEventListener('DOMContentLoaded', function () {
             'Authorization': `Bearer ${token}`
           }
         });
-        if (!res.ok) throw new Error('Erro ao buscar caso');
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.msg || err.error || 'Erro ao buscar caso');
+        }
   
         const caseData = await res.json();
   
+        // Dados gerais do caso
         getElementSafe('case-title').textContent = caseData.title || '';
         getElementSafe('case-description').textContent = caseData.description || '';
         getElementSafe('case-id').textContent = caseData._id || '';
@@ -65,46 +68,54 @@ document.addEventListener('DOMContentLoaded', function () {
         getElementSafe('case-date').textContent = caseData.createdAt ? new Date(caseData.createdAt).toLocaleDateString() : '';
         getElementSafe('case-expert').textContent = caseData.assignedUser?.name || '';
   
-        // Paciente
+        // 🧍‍♂️ Dados do paciente
         getElementSafe('patient-name').textContent = caseData.patient?.name || '';
-        getElementSafe('patient-dob').textContent = caseData.patient?.dob || '';
+        getElementSafe('patient-dob').textContent = caseData.patient?.dateOfBirth ? new Date(caseData.patient.dateOfBirth).toLocaleDateString() : '';
         getElementSafe('patient-gender').textContent = caseData.patient?.gender || '';
         getElementSafe('patient-id').textContent = caseData.patient?.document || '';
         getElementSafe('patient-contact').textContent = caseData.patient?.contact || '';
   
-        // Incidente
-        getElementSafe('incident-date').textContent = caseData.incident?.date || '';
+        // ⚠️ Dados do incidente
+        getElementSafe('incident-date').textContent = caseData.incident?.date ? new Date(caseData.incident.date).toLocaleDateString() : '';
         getElementSafe('incident-location').textContent = caseData.incident?.location || '';
         getElementSafe('incident-description').textContent = caseData.incident?.description || '';
         getElementSafe('incident-weapon').textContent = caseData.incident?.weapon || '';
   
-        await setupUI(caseData);
-        await loadEvidences(caseData);
-  
+        await loadEvidences();
       } catch (error) {
         console.error('Erro ao carregar caso:', error);
-        alert(`Erro ao carregar caso: ${error.message}`);
+        alert(`Erro ao carregar detalhes do caso: ${error.message}`);
         window.location.href = 'list-case.html';
       }
     }
   
-    async function loadEvidences(caseData) {
+    async function loadEvidences() {
       try {
         const res = await fetch(`${API_BASE_URL}/evidences/case/${caseId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
         });
         if (!res.ok) throw new Error('Erro ao carregar evidências');
+  
         const evidences = await res.json();
   
         const evidenceList = getElementSafe('evidence-list');
         const emptyMsg = getElementSafe('empty-evidence-message');
+  
         if (!evidenceList) return;
   
         evidenceList.innerHTML = '';
+  
         if (evidences.length === 0) {
-          if (emptyMsg) emptyMsg.style.display = 'block';
+          if (emptyMsg) {
+            emptyMsg.style.display = 'block';
+            emptyMsg.textContent = 'Nenhuma evidência encontrada.';
+          }
           return;
         }
+  
         if (emptyMsg) emptyMsg.style.display = 'none';
   
         evidences.forEach(ev => {
@@ -116,38 +127,19 @@ document.addEventListener('DOMContentLoaded', function () {
             <p><strong>Latitude:</strong> ${ev.latitude || ''}, <strong>Longitude:</strong> ${ev.longitude || ''}</p>
             ${ev.imageUrl ? `<img src="${ev.imageUrl}" alt="Imagem da evidência" style="max-width:200px;">` : ''}
           `;
-  
-          const isCreator = ev.addedBy?._id === userId;
-          if (userRole === 'admin' || (userRole === 'perito' && isCreator)) {
-            const delBtn = document.createElement('button');
-            delBtn.textContent = 'Excluir';
-            delBtn.className = 'btn btn-delete';
-            delBtn.onclick = async () => {
-              if (confirm('Excluir esta evidência?')) {
-                try {
-                  const delRes = await fetch(`${API_BASE_URL}/evidences/${ev._id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  if (!delRes.ok) throw new Error('Erro ao excluir evidência');
-                  alert('Evidência excluída.');
-                  await loadEvidences(caseData);
-                } catch (err) {
-                  console.error(err);
-                  alert('Erro ao excluir evidência');
-                }
-              }
-            };
-            div.appendChild(delBtn);
-          }
-  
           evidenceList.appendChild(div);
         });
       } catch (err) {
         console.error('Erro ao carregar evidências:', err);
+        const empty = getElementSafe('empty-evidence-message');
+        if (empty) {
+          empty.style.display = 'block';
+          empty.textContent = 'Erro ao carregar evidências.';
+        }
       }
     }
   
+    // Submissão de evidência
     getElementSafe('evidence-form')?.addEventListener('submit', async e => {
       e.preventDefault();
       const ev = {
@@ -165,13 +157,17 @@ document.addEventListener('DOMContentLoaded', function () {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify(ev)
         });
-        if (!res.ok) throw new Error('Erro ao adicionar evidência');
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Falha ao adicionar evidência');
+        }
         alert('Evidência adicionada!');
-        evidenceModal.style.display = 'none';
+        if (evidenceModal) evidenceModal.style.display = 'none';
         getElementSafe('evidence-form').reset();
         await loadEvidences();
       } catch (err) {
@@ -180,23 +176,28 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   
+    // Exclusão do caso
     getElementSafe('delete-case')?.addEventListener('click', async () => {
-      if (!confirm('Excluir este caso?')) return;
+      if (!confirm('Excluir caso?')) return;
       try {
         const res = await fetch(`${API_BASE_URL}/cases/${caseId}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!res.ok) throw new Error('Erro ao excluir caso');
-        alert('Caso excluído.');
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.msg || err.error);
+        }
+        alert('Caso excluído');
         window.location.href = 'list-case.html';
       } catch (err) {
-        console.error('Erro ao excluir caso:', err);
-        alert(err.message);
+        console.error(err);
+        alert('Erro ao excluir: ' + err.message);
       }
     });
   
-    // Iniciar
+    // inicializa
+    setupUI();
     loadCaseDetails();
   });
   
