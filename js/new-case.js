@@ -1,8 +1,8 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     // Menu toggle
     const menuToggle = document.getElementById('menu-toggle');
     const sidebar = document.querySelector('.sidebar');
-    
+
     menuToggle.addEventListener('click', () => {
         sidebar.classList.toggle('active');
     });
@@ -17,14 +17,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Preencher ID do caso automaticamente
     document.getElementById('case-id').value = generateCaseId();
 
-    // Form submission
+    // Formulário
     const caseForm = document.getElementById('case-form');
-    caseForm.addEventListener('submit', async function (e) {
+    caseForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(caseForm);
-        
-        // Obtendo os dados do formulário
+
         const caseData = {
             caseId: formData.get('caseId'),
             description: formData.get('description'),
@@ -37,10 +36,9 @@ document.addEventListener('DOMContentLoaded', function () {
             incidentLocation: formData.get('incidentLocation'),
             incidentDescription: formData.get('incidentDescription'),
             incidentWeapon: formData.get('incidentWeapon'),
-            user: formData.get('user')
+            user: formData.get('user') // Supondo que o ID do usuário esteja aqui
         };
 
-        // Verifica se o token está presente
         const token = localStorage.getItem('token');
         if (!token) {
             alert("Você precisa estar logado para cadastrar um caso.");
@@ -48,10 +46,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            // Usa diretamente a URL do Render
-            const baseUrl = 'https://laudos-pericias.onrender.com';
+            const apiUrl = 'https://laudos-pericias.onrender.com/api/cases';
 
-            const response = await fetch(`${baseUrl}/api/cases`, {
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -65,8 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = 'list-case.html';
             } else {
                 const errorData = await response.json();
-                console.error('Erro ao cadastrar:', errorData);
-                alert('Erro ao cadastrar caso. Verifique os dados e tente novamente.');
+                throw new Error(errorData.message || 'Erro ao cadastrar caso');
             }
         } catch (error) {
             console.error('Erro:', error);

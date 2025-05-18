@@ -6,7 +6,7 @@ menuToggle.addEventListener('click', () => {
   sidebar.classList.toggle('active');
 });
 
-// ✅ URL base da API (Render)
+// URL da API do Render
 const API_BASE_URL = 'https://laudos-pericias.onrender.com/api';
 
 // Variáveis globais
@@ -61,12 +61,11 @@ async function loadCases() {
         <button class="btn btn-retry" id="retry-button">Tentar novamente</button>
       </div>
     `;
-
     document.getElementById('retry-button').addEventListener('click', loadCases);
   }
 }
 
-// Renderizar os casos com base nos filtros
+// Renderizar os casos
 function renderCases() {
   const statusValue = filterStatus.value;
   const dateValue = filterDate.value;
@@ -135,12 +134,11 @@ function renderCases() {
         </div>
       </div>
     `;
-
     casesListContainer.appendChild(caseElement);
   });
 }
 
-// Configurar paginação
+// Paginação
 function setupPagination() {
   const statusValue = filterStatus.value;
   const searchValue = searchInput.value.toLowerCase();
@@ -158,13 +156,12 @@ function setupPagination() {
   });
 
   const totalPages = Math.ceil(filteredCases.length / casesPerPage);
-
   prevPageButton.disabled = currentPage === 1;
   nextPageButton.disabled = currentPage >= totalPages;
   currentPageSpan.textContent = currentPage;
 }
 
-// Eventos
+// Eventos de filtro e navegação
 filterStatus.addEventListener('change', () => {
   currentPage = 1;
   renderCases();
@@ -223,5 +220,5 @@ nextPageButton.addEventListener('click', () => {
   }
 });
 
-// Inicialização
+// Iniciar carregamento
 document.addEventListener('DOMContentLoaded', loadCases);

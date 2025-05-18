@@ -1,16 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
     const API_BASE_URL = 'https://laudos-pericias.onrender.com/api';
   
-    // Função utilitária para pegar elementos com segurança
     function getElementSafe(id) {
       const el = document.getElementById(id);
       if (!el) console.warn(`Elemento com id "${id}" não encontrado.`);
       return el;
     }
   
-    // Menu toggle
     const menuToggle = getElementSafe('menu-toggle');
     const sidebar = document.querySelector('.sidebar');
+  
     if (menuToggle) {
       menuToggle.addEventListener('click', () => {
         sidebar?.classList.toggle('active');
@@ -19,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
   
     const urlParams = new URLSearchParams(window.location.search);
     const caseId = urlParams.get('id');
+  
     if (!caseId) {
       alert('Caso não encontrado.');
       window.location.href = 'list-case.html';
@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const evidenceModal = getElementSafe('evidence-modal');
     const reportModal = getElementSafe('report-modal');
     const closeButtons = document.querySelectorAll('.close');
+  
     closeButtons.forEach(button => {
       button.addEventListener('click', () => {
         if (evidenceModal) evidenceModal.style.display = 'none';
@@ -50,7 +51,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch(`${API_BASE_URL}/cases/${caseId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+  
         if (!response.ok) throw new Error('Erro ao verificar permissões.');
+  
         const caseData = await response.json();
         const isOwner = caseData.assignedUser?.toString() === userId;
   
@@ -67,6 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
           getElementSafe('delete-case')?.style.setProperty('display', 'none');
           getElementSafe('add-evidence')?.style.setProperty('display', isOwner ? 'inline-block' : 'none');
         }
+  
       } catch (error) {
         console.error('Erro ao configurar UI:', error);
       }
@@ -123,6 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
   
         if (!response.ok) throw new Error('Erro ao carregar evidências');
+  
         const evidences = await response.json();
   
         if (!evidences.length) {
@@ -148,6 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
           `;
           evidenceList.appendChild(div);
         });
+  
       } catch (error) {
         console.error('Erro ao carregar evidências:', error);
         if (emptyMessage) {
@@ -203,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (evidenceModal) evidenceModal.style.display = 'none';
         getElementSafe('evidence-form').reset();
         await loadEvidences();
+  
       } catch (error) {
         console.error('Erro:', error);
         alert(`Falha ao adicionar evidência: ${error.message}`);
@@ -229,13 +236,13 @@ document.addEventListener('DOMContentLoaded', function () {
   
         alert('Caso excluído com sucesso!');
         window.location.href = 'list-case.html';
+  
       } catch (error) {
         console.error('Erro:', error);
         alert(`Erro ao excluir caso: ${error.message}`);
       }
     });
   
-    // Inicializar
     setupUI();
     loadCaseDetails();
   });

@@ -1,80 +1,70 @@
-// Evento de envio do formulário
-document.getElementById("loginForm").addEventListener("submit", async function (event) {
-    event.preventDefault(); // Impede envio automático do formulário
+document.addEventListener('DOMContentLoaded', function () {
+    // Toggle do menu lateral
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
 
-    if (validarLogin()) {
-        const cargo = document.getElementById("cargo").value;
-        const matricula = document.getElementById("matricula").value;
-        const senha = document.getElementById("senha").value;
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+    });
+
+    // Gerar e preencher ID do caso automaticamente
+    function generateCaseId() {
+        const prefix = 'CASO-';
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        return prefix + randomNum;
+    }
+
+    document.getElementById('case-id').value = generateCaseId();
+
+    // Submissão do formulário
+    const caseForm = document.getElementById('case-form');
+
+    caseForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(caseForm);
+
+        const caseData = {
+            caseId: formData.get('caseId'),
+            description: formData.get('description'),
+            patientName: formData.get('patientName'),
+            patientDOB: formData.get('patientDOB'),
+            patientGender: formData.get('patientGender'),
+            patientID: formData.get('patientID'),
+            patientContact: formData.get('patientContact'),
+            incidentDate: formData.get('incidentDate'),
+            incidentLocation: formData.get('incidentLocation'),
+            incidentDescription: formData.get('incidentDescription'),
+            incidentWeapon: formData.get('incidentWeapon'),
+            user: formData.get('user') // ou extraído do token
+        };
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("Você precisa estar logado para cadastrar um caso.");
+            return;
+        }
 
         try {
-            const resposta = await fetch('https://laudos-pericias.onrender.com/api/auth/login', {
+            const response = await fetch('https://laudos-pericias.onrender.com/api/cases', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    matricula: matricula,
-                    senha: senha
-                })
+                body: JSON.stringify(caseData)
             });
 
-            if (resposta.ok) {
-                const dados = await resposta.json();
-                localStorage.setItem('token', dados.accessToken); // Salva o token
-
-                window.location.href = "list-case.html"; // Redireciona após login
+            if (response.ok) {
+                alert('Caso cadastrado com sucesso!');
+                window.location.href = 'list-case.html';
             } else {
-                const erro = await resposta.json();
-                mostrarErro(erro.msg || "Falha no login. Verifique suas credenciais.");
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erro ao cadastrar caso.');
             }
-        } catch (erro) {
-            mostrarErro("Erro de conexão com o servidor.");
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao cadastrar caso. Por favor, tente novamente.');
         }
-    }
-});
-
-// Validação dos campos
-function validarLogin() {
-    const cargo = document.getElementById("cargo").value;
-    const matricula = document.getElementById("matricula").value;
-    const senha = document.getElementById("senha").value;
-
-    if (cargo === '') {
-        mostrarErro("Por favor, selecione seu cargo na lista");
-        return false;
-    }
-
-    if (matricula.trim() === '') {
-        mostrarErro("Digite sua matrícula para continuar");
-        return false;
-    }
-
-    if (senha.trim() === '') {
-        mostrarErro("Digite sua senha");
-        return false;
-    }
-
-    return true;
-}
-
-// Exibe mensagens de erro
-function mostrarErro(mensagem) {
-    const erro = document.getElementById("mensagemErro");
-    erro.textContent = mensagem;
-    erro.style.color = "red";
-    erro.style.display = "block";
-}
-
-// Registro do Service Worker (opcional)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(registration => {
-                console.log('Service Worker registrado com sucesso:', registration);
-            })
-            .catch(error => {
-                console.log('Falha ao registrar o Service Worker:', error);
-            });
     });
-}
+});
