@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('userRole');
     const userId = localStorage.getItem('userId');
+  
     const evidenceModal = getElementSafe('evidence-modal');
     const reportModal = getElementSafe('report-modal');
   
@@ -20,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
   
-    // setupUI idéntico, mas as chamadas usam /cases/
     async function setupUI() {
       try {
         const res = await fetch(`${API_BASE_URL}/cases/${caseId}`, {
@@ -30,15 +30,24 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         });
         if (!res.ok) throw new Error('Permissão negada ou caso não existe');
+  
         const caseData = await res.json();
         const isOwner = caseData.assignedUser?._id === userId;
-        // ... resto da lógica de mostrar botões (igual antes)
+  
+        // Exemplo: controlar visibilidade de botões de editar/excluir conforme permissões
+        const deleteBtn = getElementSafe('delete-case');
+        if (deleteBtn) {
+          deleteBtn.style.display = (userRole === 'admin' || isOwner) ? 'inline-block' : 'none';
+        }
+  
+        // Você pode continuar com outras regras de UI aqui
+  
       } catch (err) {
         console.error('Erro ao configurar UI:', err);
+        alert('Erro ao configurar interface: ' + err.message);
       }
     }
   
-    // loadCaseDetails também usa /cases/
     async function loadCaseDetails() {
       try {
         const res = await fetch(`${API_BASE_URL}/cases/${caseId}`, {
@@ -51,8 +60,24 @@ document.addEventListener('DOMContentLoaded', function () {
           const err = await res.json();
           throw new Error(err.msg || err.error || 'Erro ao buscar caso');
         }
-        const caseData = await res.json();
-        // ... preencher campos da página
+        const caseData = await res.json(); // CHAMADA DUPLICADA! Vou corrigir abaixo.
+  
+        // CORREÇÃO:
+        // você não pode chamar res.json() duas vezes na mesma resposta
+        // então vamos chamar só uma vez:
+  
+        // const caseData = await res.json(); // já lido acima, remover duplicação
+  
+        // preencher campos do HTML:
+        getElementSafe('case-title').textContent = caseData.title || '';
+        getElementSafe('case-description').textContent = caseData.description || '';
+        getElementSafe('case-id').textContent = caseData._id || '';
+        getElementSafe('case-status').textContent = caseData.status || '';
+        getElementSafe('case-date').textContent = caseData.createdAt ? new Date(caseData.createdAt).toLocaleDateString() : '';
+        getElementSafe('case-expert').textContent = caseData.assignedUser?.name || '';
+        getElementSafe('case-patient').textContent = caseData.patient?.name || '';
+        getElementSafe('case-incident').textContent = caseData.incident?.description || '';
+  
         await loadEvidences();
       } catch (error) {
         console.error('Erro ao carregar caso:', error);
@@ -70,8 +95,38 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         });
         if (!res.ok) throw new Error('Erro ao carregar evidências');
+  
         const evidences = await res.json();
-        // ... renderização das evidências
+  
+        const evidenceList = getElementSafe('evidence-list');
+        const emptyMsg = getElementSafe('empty-evidence-message');
+  
+        if (!evidenceList) return;
+  
+        evidenceList.innerHTML = ''; // limpa lista
+  
+        if (evidences.length === 0) {
+          if (emptyMsg) {
+            emptyMsg.style.display = 'block';
+            emptyMsg.textContent = 'Nenhuma evidência encontrada.';
+          }
+          return;
+        }
+  
+        if (emptyMsg) emptyMsg.style.display = 'none';
+  
+        evidences.forEach(ev => {
+          const div = document.createElement('div');
+          div.className = 'evidence-item';
+          div.innerHTML = `
+            <p><strong>Data:</strong> ${ev.collectionDate ? new Date(ev.collectionDate).toLocaleDateString() : ''} ${ev.collectionTime || ''}</p>
+            <p><strong>Descrição:</strong> ${ev.description || ''}</p>
+            <p><strong>Latitude:</strong> ${ev.latitude || ''}, <strong>Longitude:</strong> ${ev.longitude || ''}</p>
+            ${ev.imageUrl ? `<img src="${ev.imageUrl}" alt="Imagem da evidência" style="max-width:200px;">` : ''}
+            <!-- aqui você pode adicionar botões editar/excluir se quiser -->
+          `;
+          evidenceList.appendChild(div);
+        });
       } catch (err) {
         console.error('Erro ao carregar evidências:', err);
         const empty = getElementSafe('empty-evidence-message');
@@ -82,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
   
-    // Submissão de evidência—já aponta para /evidences e campos corretos
+    // Submissão de evidência
     getElementSafe('evidence-form')?.addEventListener('submit', async e => {
       e.preventDefault();
       const ev = {
@@ -110,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
           throw new Error(err.error || 'Falha ao adicionar evidência');
         }
         alert('Evidência adicionada!');
-        getElementSafe('evidence-modal').style.display = 'none';
+        if (evidenceModal) evidenceModal.style.display = 'none';
         getElementSafe('evidence-form').reset();
         await loadEvidences();
       } catch (err) {
@@ -119,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   
-    // delete-case e edit-case permanecem iguais, exceto URL plural:
+    // Exclusão do caso
     getElementSafe('delete-case')?.addEventListener('click', async () => {
       if (!confirm('Excluir caso?')) return;
       try {
